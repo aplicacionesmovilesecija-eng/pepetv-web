@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<meta name="robots" content="noindex, nofollow">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>PepeTV</title>
@@ -257,7 +258,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 const BRAND = {
   name:    'PepeTV',
   prefix:  'PEPE',                 // empieza el código de aparato: PEPE-XXXX-XXXX
-  version: '2.6',
+  version: '2.7',
   logo:    'marca/logo.png',       // logo alargado (portada y activación)
   icon:    'marca/icono.png',      // icono cuadrado (arranque y app)
   colors:  { c1:'#00D8F6', c2:'#0057F0', bg:'#05070C' },
@@ -532,16 +533,28 @@ function pintaListas(){
     <div class="bola">${esc((l.name||'?').trim().charAt(0).toUpperCase())}</div><span>${esc(l.name)}</span><small>${esc(l.type==='xtream'?'Xtream':l.type==='file'?'M3U':'URL')}</small></button>`).join('');
 }
 
+/* 2.6: en la web (iPhone/navegador) el aparato solo se da de alta cuando una persona pulsa «Empezar» (los robots no lo hacen) */
+const esNativa = () => !!(window.PepePC || (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()));
+function esperaPersona(){
+  if (esNativa() || lee('lic') || lee('humano')) return Promise.resolve();
+  return new Promise(ok => {
+    const st = $('#splashTxt'); st.textContent = '';
+    st.insertAdjacentHTML('afterend', '<button class="btn pri f" id="bEmpezar" style="margin:calc(var(--u)*2) auto 0;font-size:calc(var(--u)*var(--ft)*1.6);padding:calc(var(--u)*1.2) calc(var(--u)*4)">Empezar</button>');
+    const b = $('#bEmpezar'); try { b.focus(); } catch (e) {}
+    b.onclick = () => { guarda('humano', 1); b.remove(); st.textContent = 'Conectando…'; ok(); };
+  });
+}
 async function arranca(forzar){
   pintaTextos();
   muestra('splash', false);
+  await esperaPersona();
   try{ LIC = await pideLicencia(); }
   catch(e){ $('#splashTxt').textContent = t('errConexion'); setTimeout(arranca, 8000); return; }
   if (LIC.pinReset) { guarda('pin_h', ''); delete LIC.pinReset; guarda('lic', LIC); setTimeout(() => aviso('Tu proveedor ha quitado el PIN de control parental'), 800); }
   if (LIC.reset) {           // el proveedor ha pedido dejar la app como recién instalada (código y licencia se quedan)
     const cod = lee('code'); delete LIC.reset;
     try { localStorage.clear(); } catch (e) {} try { indexedDB.deleteDatabase('pepetv'); } catch (e) {}
-    if (cod) guarda('code', cod); guarda('lic', LIC);
+    if (cod) guarda('code', cod); guarda('sec', SEC); guarda('humano', 1); guarda('lic', LIC);   // la clave del aparato se conserva
     $('#splashTxt').textContent = 'Tu proveedor ha reiniciado la app…'; setTimeout(() => location.reload(), 1500); return;
   }
   pintaTextos();
