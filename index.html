@@ -15,7 +15,10 @@
 <meta name="theme-color" content="#05070C">
 <script>window.IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);</script>
 <script>/* 2.6: en la web pepe-tv.com siempre por http (los canales IPTV van por http y una web https no deja reproducirlos) */
-if (location.protocol === 'https:' && /(^|\.)pepe-tv\.com$/i.test(location.hostname)) location.replace('http://' + location.host + location.pathname + location.search + location.hash);</script>
+if (location.protocol === 'https:' && /(^|\.)pepe-tv\.com$/i.test(location.hostname)) {
+  let n = 0; try { n = +sessionStorage.getItem('ptv_ahttp') || 0; sessionStorage.setItem('ptv_ahttp', n + 1); } catch (e) {}
+  if (n < 2) location.replace('http://' + location.host + location.pathname + location.search + location.hash);   // si GitHub volviera a obligar https, no se queda saltando
+}</script>
 <style>
 /* ===================================================================
    COLORES: los pone la marca (BRAND.colors). Si se dejan vacíos,
