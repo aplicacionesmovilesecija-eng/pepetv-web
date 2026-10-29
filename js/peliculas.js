@@ -50,7 +50,6 @@ document.querySelector('#sec .smain').insertAdjacentHTML('beforeend', `
       <button class="rb f" data-go="pf:pausa" id="fbPausa">${ICP.pausa}</button>
       <button class="rb f" data-go="pf:reinicio">${ICP.reinicio}</button>
       <button class="rb f" data-go="pf:fav" id="fbFav">${IC.fav}</button>
-      <button class="rb f" data-go="pf:trailer">${ICP.yt}</button>
       <button class="rb f" data-go="pf:atras">${ICP.atras}</button>
     </div>
     <div class="fder">

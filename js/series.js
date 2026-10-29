@@ -29,7 +29,6 @@ document.querySelector('#sec .smain').insertAdjacentHTML('beforeend', `
       <button class="rb f" data-go="pf:pausa" id="sbPausa">${ICP.pausa}</button>
       <button class="rb f" data-go="pf:reinicio">${ICP.reinicio}</button>
       <button class="rb f" data-go="pf:fav">${IC.fav}</button>
-      <button class="rb f" data-go="pf:trailer">${ICP.yt}</button>
       <button class="rb f" data-go="pf:atras">${ICP.atras}</button>
     </div>
     <div class="scol1"><div class="fpos" id="sPos"></div></div>

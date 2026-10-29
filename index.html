@@ -258,7 +258,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 const BRAND = {
   name:    'PepeTV',
   prefix:  'PEPE',                 // empieza el código de aparato: PEPE-XXXX-XXXX
-  version: '2.7',
+  version: '2.8',
   logo:    'marca/logo.png',       // logo alargado (portada y activación)
   icon:    'marca/icono.png',      // icono cuadrado (arranque y app)
   colors:  { c1:'#00D8F6', c2:'#0057F0', bg:'#05070C' },
@@ -431,11 +431,16 @@ function sacaIp(){
   fetch('https://api.ipify.org?format=json').then(r => r.json()).then(j => { if (j && j.ip) MI_IP = String(j.ip); }).catch(() => {});
 }
 sacaIp();
+/* 2.8: para el panel, cuándo caduca la lista de canales que tiene puesta (la da el servidor del proveedor) */
+function infoLista(){
+  try { if (typeof LISTA === 'undefined' || !LISTA || typeof listaActual !== 'function') return ''; const l = listaActual(); if (!l) return '';
+    return '&le=' + (LISTA.exp ? Math.round(LISTA.exp) : 0) + '&ln=' + encodeURIComponent(String(l.name || '').slice(0, 40)); } catch (e) { return ''; }
+}
 function ping(){
   if (!BRAND.api || document.hidden) return;
   ultPing = Date.now(); sacaIp();
   const vis = typeof avisosPorConfirmar !== 'undefined' ? avisosPorConfirmar.slice() : [];      // avisos ya enseñados: se le dice al panel
-  fetch(BRAND.api + '?a=ping&d=' + encodeURIComponent(CODE) + '&s=' + encodeURIComponent(SEC) + '&w=' + encodeURIComponent(queVe()) + (vis.length ? '&vis=' + encodeURIComponent(vis.join(',')) : '') + (MI_IP ? '&ip=' + encodeURIComponent(MI_IP) : ''))
+  fetch(BRAND.api + '?a=ping&d=' + encodeURIComponent(CODE) + '&s=' + encodeURIComponent(SEC) + '&w=' + encodeURIComponent(queVe()) + (vis.length ? '&vis=' + encodeURIComponent(vis.join(',')) : '') + (MI_IP ? '&ip=' + encodeURIComponent(MI_IP) : '') + infoLista())
     .then(r => r.json()).then(j => {
       if (vis.length) avisosPorConfirmar.splice(0, vis.length);
       if (j && j.avisos && typeof muestraAvisos === 'function') muestraAvisos(j.avisos);
@@ -688,5 +693,8 @@ addEventListener('DOMContentLoaded', async ()=>{
 <script src="js/estado.js"></script>
 <script src="js/vista.js"></script>
 <script src="js/tip.js"></script>
+<script src="js/pistas.js"></script>
+<script src="js/pc.js"></script>
+<script src="js/descarga.js"></script>
 </body>
 </html>

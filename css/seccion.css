@@ -173,3 +173,4 @@ body.full .lbar{display:none}
 #vItems[data-vista="lista"]:not([data-cols="1"]) .row.it .lo{width:calc(var(--u)*3.2);height:calc(var(--u)*2.4)}
 #vItems[data-vista="lista"]:not([data-cols="1"]) .row.it .nu{min-width:0;width:auto;padding:0 calc(var(--u)*.4);font-size:calc(var(--u)*var(--ft)*.9)}
 #vItems[data-vista="lista"]:not([data-cols="1"]) .row.it .eq{display:none}
+.lbar .lbi.kf,.lbar .lbi:focus-visible{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 0 0 calc(var(--u)*.25) var(--c1),0 0 calc(var(--u)*1.6) color-mix(in srgb,var(--c1) 50%,transparent);outline:none}   /* 2.8: botón del reproductor con el mando */

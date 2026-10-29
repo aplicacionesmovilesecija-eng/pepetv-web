@@ -78,7 +78,7 @@ teclaSeccion = function(e){
     const L = S.items.length, col = S.it % n; let j = null;
     if (k === 'ArrowDown') j = Math.min(L - 1, S.it + n);
     else if (k === 'ArrowUp') { if (S.it - n >= 0) j = S.it - n; }
-    else if (k === 'ArrowRight') { if (col < n - 1 && S.it + 1 < L) j = S.it + 1; else { e.preventDefault(); return true; } }
+    else if (k === 'ArrowRight') { if (col < n - 1 && S.it + 1 < L) j = S.it + 1; }          // en la última columna: pasa a los botones del reproductor
     else if (k === 'ArrowLeft' && col > 0) j = S.it - 1;
     if (j !== null) { e.preventDefault(); S.it = j; vItems.marca(S.it); if (typeof guiaDe === 'function') guiaDe(S.items[S.it]); return true; }
   }

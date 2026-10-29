@@ -175,3 +175,30 @@ accion = function(go){
   }
   return _accionRad(go);
 };
+
+/* ---------- 2.8: mando en TV en vivo y Radios: desde los canales, → lleva a los botones de debajo del reproductor ---------- */
+let LBI = 0;
+function lbarBotones(){ return [...document.querySelectorAll('#lbar .lbi')].filter(b => b.offsetParent !== null); }
+function lbarFoco(i){ const l = lbarBotones(); if (!l.length) return false; LBI = Math.max(0, Math.min(l.length - 1, i)); enfoca(l[LBI]);
+  if (typeof muestraTip === 'function') setTimeout(() => muestraTip(l[LBI], 2.5), 30); return true; }
+function lbarSal(){ S.zona = 'items'; const a = document.activeElement; if (a && a.closest && a.closest('#lbar')) { a.blur(); a.classList.remove('kf'); } marcaZonas(); }
+const _teclaSeccionL = teclaSeccion;
+teclaSeccion = function(e){
+  const sec = document.getElementById('sec');
+  if (!sec.classList.contains('on') || document.querySelector('.velo.on') || document.body.classList.contains('full')
+      || (typeof PF !== 'undefined' && PF.abierta) || (typeof SF !== 'undefined' && SF.abierta) || !(S.tipo === 'live' || S.tipo === 'radio')
+      || document.getElementById('scarga').classList.contains('on')) return _teclaSeccionL(e);
+  const k = e.key, c = e.keyCode, atrasK = k === 'Escape' || k === 'Backspace' || k === 'GoBack' || c === 10009 || c === 461 || c === 4;
+  if (S.zona === 'lbar') {
+    e.preventDefault();
+    if (k === 'ArrowLeft') { if (LBI > 0) lbarFoco(LBI - 1); else lbarSal(); }
+    else if (k === 'ArrowRight') lbarFoco(LBI + 1);
+    else if (k === 'Enter' || k === ' ') { const b = lbarBotones()[LBI]; if (b) b.click(); }
+    else if (atrasK || k === 'ArrowUp' || k === 'ArrowDown') lbarSal();
+    return true;
+  }
+  if (S.zona === 'items' && k === 'ArrowRight' && S.items.length && lbarBotones().length) {
+    e.preventDefault(); S.zona = 'lbar'; marcaZonas(); lbarFoco(0); return true;
+  }
+  return _teclaSeccionL(e);
+};

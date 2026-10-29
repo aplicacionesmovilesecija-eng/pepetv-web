@@ -305,3 +305,24 @@ body.full .pbox.vod .pbar{bottom:auto;top:4%}
 .pband.ev{background:#16a34a}.pband.en{background:#f59e0b}.pband.er{background:#dc2626}
 .bEst.ev{background:#16a34a !important;color:#fff !important}.bEst.en{background:#f59e0b !important;color:#fff !important}.bEst.er{background:#dc2626 !important;color:#fff !important}
 .rbar.r5{grid-template-columns:repeat(5,minmax(0,1fr))}   /* 2.5: series = 10 iconos en 2 filas de 5 */
+
+/* 2.8: fila extra de la barra (Descargar · Otro reproductor) y cajita de descargas */
+.rbar .rbExtra{grid-column:1/-1;display:flex;gap:calc(var(--u)*.6)}
+.rbar .rbExtra .btn.rbi{flex:1 1 0;flex-direction:column;gap:calc(var(--u)*.3);font-size:calc(var(--u)*1);line-height:1.1;white-space:nowrap;overflow:hidden;padding:calc(var(--u)*.55) calc(var(--u)*.3)}
+.rbar .rbExtra .rbi svg{flex:none}
+.descCaja{position:fixed;right:calc(var(--u)*1.2);bottom:calc(var(--u)*1.2);z-index:60;display:none;flex-direction:column;gap:calc(var(--u)*.6);width:min(92vw,calc(var(--u)*34))}
+.descCaja.on{display:flex}
+.descIt{background:var(--pan,#121826);border:1px solid rgba(255,255,255,.12);border-radius:calc(var(--u)*1);padding:calc(var(--u)*.8) calc(var(--u)*1);box-shadow:0 8px 30px rgba(0,0,0,.45);font-size:calc(var(--u)*1.05)}
+.descN{display:flex;align-items:center;gap:calc(var(--u)*.5);font-weight:600}
+.descN svg{width:calc(var(--u)*1.5);height:calc(var(--u)*1.5);flex:none;color:var(--acc,#22d3ee)}
+.descN span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.descB{height:calc(var(--u)*.45);background:rgba(255,255,255,.12);border-radius:9px;margin:calc(var(--u)*.6) 0;overflow:hidden}
+.descB i{display:block;height:100%;background:linear-gradient(90deg,#22d3ee,#2563eb);transition:width .4s}
+.descP{display:flex;align-items:center;gap:calc(var(--u)*.5);color:var(--mut,#9aa3b2)}
+.descP span{flex:1}
+.descP .btn{padding:calc(var(--u)*.3) calc(var(--u)*.8);font-size:calc(var(--u)*.95);min-height:0}
+/* 2.8: con los botones de audio y subtítulos: pelis 2 filas de 5, series 2 filas de 6 */
+.rbar.rp{grid-template-columns:repeat(5,minmax(0,1fr))}
+.rbar.rp.r5{grid-template-columns:repeat(6,minmax(0,1fr))}
+.rbar .rbi.poco{opacity:.45}
+@media (orientation:portrait){ .rbar.rp,.rbar.rp.r5{grid-template-columns:repeat(auto-fit,minmax(calc(var(--u)*5.2),1fr))} }
