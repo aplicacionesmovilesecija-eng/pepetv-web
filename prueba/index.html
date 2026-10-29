@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>PepeTV prueba</title>
+<link rel="icon" href="marca/icono.png">
+<!-- iPhone / iPad: se instala desde Safari con "Compartir → Añadir a pantalla de inicio" -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="marca/icono-ios-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PepeTV prueba">
+<meta name="theme-color" content="#05070C">
+<script>window.IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);</script>
+<script>/* 2.6: en la web pepe-tv.com siempre por http (los canales IPTV van por http y una web https no deja reproducirlos) */
+if (location.protocol === 'https:' && /(^|\.)pepe-tv\.com$/i.test(location.hostname)) {
+  let n = 0; try { n = +sessionStorage.getItem('ptv_ahttp') || 0; sessionStorage.setItem('ptv_ahttp', n + 1); } catch (e) {}
+  if (n < 2) location.replace('http://' + location.host + location.pathname + location.search + location.hash);   // si GitHub volviera a obligar https, no se queda saltando
+}</script>
+<style>
+/* ===================================================================
+   COLORES: los pone la marca (BRAND.colors). Si se dejan vacíos,
+   la app los saca sola del logo. No tocar aquí.
+   =================================================================== */
+:root{
+  --c1:#00D8F6; --c2:#0057F0; --bg:#05070C;
+  --bg2:#0B1019; --card:#101826; --card2:#162133;
+  --line:rgba(255,255,255,.08); --txt:#F3F7FC; --mut:#8C9AB0;
+  --ok:#22C55E; --warn:#F5A524; --bad:#EF4444;
+  --grad:linear-gradient(135deg,var(--c1),var(--c2));
+  --u:min(1vw,1.78vh);
+  --ft:1;                        /* tamaño del texto (botón Aa) */           /* unidad que escala igual en móvil y TV */
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--txt);
+  font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;overflow:hidden;user-select:none}
+body{background:
+  radial-gradient(ellipse 70% 60% at 85% -10%,color-mix(in srgb,var(--c2) 22%,transparent),transparent 70%),
+  radial-gradient(ellipse 60% 50% at -10% 110%,color-mix(in srgb,var(--c1) 14%,transparent),transparent 70%),
+  var(--bg)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.scr{position:fixed;inset:0;display:none;flex-direction:column}
+.scr.on{display:flex}
+
+/* foco del mando */
+.f{outline:none;transition:transform .15s,box-shadow .15s,background .15s,border-color .15s}
+.f:focus-visible,.f.kf{box-shadow:0 0 0 calc(var(--u)*.3) var(--c1),0 0 calc(var(--u)*2.4) color-mix(in srgb,var(--c1) 55%,transparent);transform:scale(1.04)}
+
+/* ---------- arranque ---------- */
+#splash{align-items:center;justify-content:center;gap:calc(var(--u)*4)}
+#splash img{width:calc(var(--u)*22);animation:lat 1.6s ease-in-out infinite}
+@keyframes lat{50%{transform:scale(1.06);filter:drop-shadow(0 0 calc(var(--u)*3) var(--c1))}}
+.barra{width:calc(var(--u)*24);height:calc(var(--u)*.5);border-radius:9px;background:var(--line);overflow:hidden}
+.barra i{display:block;height:100%;width:40%;background:var(--grad);border-radius:9px;animation:car 1.1s ease-in-out infinite}
+@keyframes car{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
+#splashTxt{color:var(--mut);font-size:calc(var(--u)*var(--ft)*1.5)}
+
+/* ---------- activación ---------- */
+#act{align-items:center;justify-content:center;padding:calc(var(--u)*2) calc(var(--u)*3) calc(var(--u)*6);overflow:auto}
+.actBox{width:min(100%,calc(var(--u)*92));display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*1.5);text-align:center}
+.actBox .logo{height:calc(var(--u)*6.5)}
+.actVer{color:var(--mut);font-size:calc(var(--u)*var(--ft)*1.1);margin-top:calc(var(--u)*-1)}
+.actEstado{display:inline-flex;align-items:center;gap:calc(var(--u)*1);padding:calc(var(--u)*.8) calc(var(--u)*2.2);
+  border-radius:99px;font-weight:700;font-size:calc(var(--u)*var(--ft)*1.6);letter-spacing:.04em;text-transform:uppercase;
+  background:color-mix(in srgb,var(--bad) 16%,transparent);color:#FF8A8A;border:1px solid color-mix(in srgb,var(--bad) 40%,transparent)}
+.actEstado.ok{background:color-mix(in srgb,var(--ok) 15%,transparent);color:#7DE8A4;border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
+.actEstado i{width:calc(var(--u)*1);height:calc(var(--u)*1);border-radius:50%;background:currentColor}
+.actTit{font-size:calc(var(--u)*var(--ft)*2.6);font-weight:800}
+.actMsg{color:var(--mut);font-size:calc(var(--u)*var(--ft)*1.5);max-width:calc(var(--u)*70);line-height:1.45}
+.planes{display:flex;gap:calc(var(--u)*2.4);margin-top:calc(var(--u)*.6)}
+.plan{width:calc(var(--u)*20);padding:calc(var(--u)*1.5);border-radius:calc(var(--u)*1.8);background:var(--card);border:1px solid var(--line);position:relative}
+.plan.dest{border:1px solid transparent;background:linear-gradient(var(--card),var(--card)) padding-box,var(--grad) border-box}
+.plan .pre{font-size:calc(var(--u)*var(--ft)*3.4);font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.plan .dur{font-size:calc(var(--u)*var(--ft)*1.7);color:var(--mut);margin-top:calc(var(--u)*.3)}
+.plan .tag{position:absolute;top:calc(var(--u)*-1.1);left:50%;transform:translateX(-50%);background:var(--grad);color:#fff;
+  font-size:calc(var(--u)*var(--ft)*1.1);font-weight:700;padding:calc(var(--u)*.3) calc(var(--u)*1.2);border-radius:99px;white-space:nowrap}
+.codigo{display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*.6);padding:calc(var(--u)*1.1) calc(var(--u)*4);
+  border-radius:calc(var(--u)*1.6);background:var(--bg2);border:1px dashed color-mix(in srgb,var(--c1) 45%,transparent)}
+.codigo small{color:var(--mut);font-size:calc(var(--u)*var(--ft)*1.3);text-transform:uppercase;letter-spacing:.12em}
+.codigo b{font-size:calc(var(--u)*var(--ft)*3.2);letter-spacing:.08em;font-family:Consolas,"Roboto Mono",monospace}
+.botones{display:flex;gap:calc(var(--u)*1.6);flex-wrap:wrap;justify-content:center}
+.btn{display:inline-flex;align-items:center;gap:calc(var(--u)*1);padding:calc(var(--u)*1.2) calc(var(--u)*2.6);border-radius:calc(var(--u)*1.2);
+  background:var(--card2);border:1px solid var(--line);font-size:calc(var(--u)*var(--ft)*1.6);font-weight:600}
+.btn svg{width:calc(var(--u)*2);height:calc(var(--u)*2)}
+.btn.pri{background:var(--grad);border-color:transparent;color:#fff}
+.pie{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-between;gap:calc(var(--u)*2);
+  padding:calc(var(--u)*1.4) calc(var(--u)*3);color:var(--mut);font-size:calc(var(--u)*var(--ft)*1.2);border-top:1px solid var(--line);background:color-mix(in srgb,var(--bg) 85%,transparent)}
+.pie b{color:var(--txt);font-weight:600}
+
+/* ---------- portada ---------- */
+#home{padding:calc(var(--u)*3) calc(var(--u)*4) calc(var(--u)*7)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:calc(var(--u)*2)}
+.marca{display:flex;align-items:flex-end;gap:calc(var(--u)*1.2)}
+.marca img{height:calc(var(--u)*6.5)}
+.marca span{color:var(--mut);font-size:calc(var(--u)*var(--ft)*1.2);padding-bottom:calc(var(--u)*.4)}
+.estado{display:flex;flex-direction:column;align-items:flex-end;gap:calc(var(--u)*.6)}
+.pastilla{white-space:nowrap;display:inline-flex;align-items:center;gap:calc(var(--u)*.8);padding:calc(var(--u)*.6) calc(var(--u)*1.6);border-radius:99px;
+  font-size:calc(var(--u)*var(--ft)*1.35);font-weight:700;background:color-mix(in srgb,var(--ok) 16%,transparent);color:#7DE8A4}
+.pastilla.prueba{background:color-mix(in srgb,var(--warn) 16%,transparent);color:#FFC766}
+.pastilla i{width:calc(var(--u)*.8);height:calc(var(--u)*.8);border-radius:50%;background:currentColor}
+.reloj{font-size:calc(var(--u)*var(--ft)*2.6);font-weight:300;letter-spacing:.02em}
+.listaAct{margin:calc(var(--u)*3) 0 calc(var(--u)*2.2);display:flex;align-items:center;gap:calc(var(--u)*1.2);color:var(--mut);font-size:calc(var(--u)*var(--ft)*1.5)}
+.listaAct b{color:var(--txt)}
+.tiles{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:calc(var(--u)*2.2);min-height:0;max-height:calc(var(--u)*34)}
+.tile{position:relative;border-radius:calc(var(--u)*2);background:var(--card);border:1px solid var(--line);overflow:hidden;
+  display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;padding:calc(var(--u)*2.4);text-align:left}
+.tile::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 100% 0,color-mix(in srgb,var(--c1) 22%,transparent),transparent 60%);opacity:.6;transition:opacity .2s}
+.tile .ico{position:absolute;top:calc(var(--u)*2.4);left:calc(var(--u)*2.4);width:calc(var(--u)*7);height:calc(var(--u)*7);border-radius:calc(var(--u)*1.8);
+  background:var(--grad);display:grid;place-items:center;box-shadow:0 calc(var(--u)*1) calc(var(--u)*3) color-mix(in srgb,var(--c2) 45%,transparent)}
+.tile .ico svg{width:55%;height:55%;color:#fff}
+.tile b{position:relative;font-size:calc(var(--u)*min(var(--ft),1.1)*2.5);font-weight:800}
+.tile small{position:relative;color:var(--mut);font-size:calc(var(--u)*var(--ft)*1.3);margin-top:calc(var(--u)*.4)}
+.tile.f:focus-visible,.tile.kf{border-color:transparent;background:linear-gradient(var(--card2),var(--card2)) padding-box,var(--grad) border-box}
+.tile.f:focus-visible::before,.tile.kf::before{opacity:1}
+.tile.vacia{opacity:.42;filter:grayscale(.85)}
+.tile.vacia.kf,.tile.vacia:focus-visible{opacity:.7}
+/* botones de la portada: una sola fila; si no caben, se deslizan con las flechas ‹ › (solo salen cuando hay más botones hacia ese lado) */
+.carril{position:relative;margin-top:calc(var(--u)*2.6)}
+.homeBtns{display:flex;gap:calc(var(--u)*1);flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scroll-behavior:smooth;scrollbar-width:none;padding:calc(var(--u)*.6) calc(var(--u)*.4)}
+.homeBtns::-webkit-scrollbar{display:none}
+.homeBtns .btn{padding:calc(var(--u)*1) calc(var(--u)*1.5);gap:calc(var(--u)*.8);flex:none;white-space:nowrap}
+.nLis{margin-left:calc(var(--u)*-.45);opacity:.85}.nLis:empty{display:none}
+.flecha{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:calc(var(--u)*4.4);height:calc(var(--u)*4.4);border-radius:50%;border:0;
+  background:var(--grad);color:#fff;font-size:calc(var(--u)*3.2);font-weight:800;line-height:1;display:grid;place-items:center;padding-bottom:calc(var(--u)*.4);
+  box-shadow:0 0 calc(var(--u)*1.6) color-mix(in srgb,var(--c1) 55%,transparent),0 0 0 calc(var(--u)*.5) var(--bg)}
+.flecha[hidden]{display:none}
+.flecha.izq{left:calc(var(--u)*-1)}.flecha.der{right:calc(var(--u)*-1)}
+
+/* ---------- elegir lista ---------- */
+#listas{align-items:center;justify-content:center;gap:calc(var(--u)*4);padding:calc(var(--u)*3)}
+#listas h2{font-size:calc(var(--u)*var(--ft)*3);font-weight:800}
+.circulos{display:flex;gap:calc(var(--u)*3.4);flex-wrap:wrap;justify-content:center}
+.circ{display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*1.4);width:calc(var(--u)*17)}
+.circ .bola{width:calc(var(--u)*15);height:calc(var(--u)*15);border-radius:50%;display:grid;place-items:center;
+  font-size:calc(var(--u)*var(--ft)*5);font-weight:800;background:var(--card);border:calc(var(--u)*.35) solid var(--line);transition:.15s}
+.circ.sel .bola{border-color:var(--c1)}
+.circ span{font-size:calc(var(--u)*var(--ft)*1.6);font-weight:600;text-align:center}
+.circ small{color:var(--mut);font-size:calc(var(--u)*var(--ft)*1.2);margin-top:calc(var(--u)*-1)}
+.circ.f:focus-visible,.circ.kf{transform:none;box-shadow:none}
+.circ.f:focus-visible .bola,.circ.kf .bola{background:var(--grad);border-color:transparent;transform:scale(1.08);box-shadow:0 0 calc(var(--u)*4) color-mix(in srgb,var(--c1) 50%,transparent)}
+
+/* ---------- ventanas ---------- */
+.velo{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:50;backdrop-filter:blur(6px)}
+.velo.on{display:flex}
+.ven{width:min(92vw,calc(var(--u)*62));background:var(--bg2);border:1px solid var(--line);border-radius:calc(var(--u)*2);padding:calc(var(--u)*3);
+  display:flex;flex-direction:column;gap:calc(var(--u)*1.6)}
+.ven h3{font-size:calc(var(--u)*var(--ft)*2.3)}
+.fila{display:flex;justify-content:space-between;gap:calc(var(--u)*2);padding:calc(var(--u)*1) 0;border-bottom:1px solid var(--line);font-size:calc(var(--u)*var(--ft)*1.55)}
+.fila span{color:var(--mut)}
+.opc{display:flex;align-items:center;justify-content:space-between;padding:calc(var(--u)*1.3) calc(var(--u)*1.8);border-radius:calc(var(--u)*1.2);
+  background:var(--card);border:1px solid var(--line);font-size:calc(var(--u)*var(--ft)*1.7);text-align:left;width:100%}
+.opc.sel::after{content:"✓";color:var(--c1);font-weight:800}
+.ven .botones{justify-content:flex-end;margin-top:calc(var(--u)*.6)}
+#aviso{position:fixed;left:50%;bottom:calc(var(--u)*9);transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;
+  background:var(--card2);border:1px solid var(--line);padding:calc(var(--u)*1.2) calc(var(--u)*2.4);border-radius:99px;font-size:calc(var(--u)*var(--ft)*1.5);transition:.25s;z-index:60}
+#aviso.on{opacity:1;transform:translateX(-50%)}
+
+/* ---------- móvil en vertical ---------- */
+@media (orientation:portrait){
+  :root{--u:min(1.9vw,1.2vh)}
+  .tiles{grid-template-columns:repeat(2,1fr);max-height:none}
+  .planes{flex-direction:column}
+  .plan{width:calc(var(--u)*36)}
+  #home{overflow-x:hidden;overflow-y:auto}
+  #home .top{flex-wrap:wrap;row-gap:calc(var(--u)*1.2)}
+  #home .estado{flex-direction:row-reverse;align-items:center;justify-content:space-between;width:100%;gap:calc(var(--u)*1)}
+  #home .reloj{font-size:calc(var(--u)*var(--ft)*2.2)}
+  #home .pastilla{white-space:normal;max-width:100%}
+  .pie{flex-direction:column;align-items:center;text-align:center;gap:calc(var(--u)*.4)}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ ARRANQUE ============ -->
+<section class="scr on" id="splash">
+  <img data-icon alt="">
+  <div class="barra"><i></i></div>
+  <div id="splashTxt" data-t="comprobando">Comprobando licencia…</div>
+</section>
+
+<!-- ============ ACTIVACIÓN ============ -->
+<section class="scr" id="act">
+  <div class="actBox">
+    <img class="logo" data-logo alt="">
+    <span class="actVer" data-version></span>
+    <div class="actEstado" id="actEstado"><i></i><span></span></div>
+    <div class="actTit" id="actTit"></div>
+    <div class="actMsg" id="actMsg"></div>
+    <div class="planes" id="planes"></div>
+    <div class="codigo"><small data-t="codigoAparato">Código del aparato</small><b data-code></b></div>
+    <div class="actMsg" id="actContacto"></div>
+    <div class="botones">
+      <button class="btn pri f" data-go="soporte" id="actSop" hidden><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.4 1.8 2.2 1.2 1.1 2.2 1.4 2.5 1.6.3.1.5.1.7-.1l.9-1.1c.2-.3.4-.2.7-.1l1.9.9c.3.1.5.2.5.4.1.1.1.7-.1 1.3z"/></svg><span data-t="soporte">Contactar con soporte</span></button>
+      <button class="btn f" data-go="refrescar" id="actAct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg><span data-t="actualizar">Actualizar</span></button>
+      <button class="btn f" data-go="idioma"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg><span data-t="idioma">Idioma</span></button>
+      <button class="btn f" data-go="salir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></svg><span data-t="salir">Salir</span></button>
+    </div>
+  </div>
+  <div class="pie"><div><span data-t="codigo">Código</span>: <b data-code></b> · <span id="actFecha"></span></div><div data-legal></div></div>
+</section>
+
+<!-- ============ PORTADA ============ -->
+<section class="scr" id="home">
+  <div class="top">
+    <div class="marca"><img data-logo alt=""><span data-version></span></div>
+    <div class="estado"><div class="reloj" data-clock></div><div class="pastilla" id="pastilla"><i></i><span></span></div></div>
+  </div>
+  <div class="listaAct" id="listaAct"></div>
+  <div class="tiles">
+    <button class="tile f" data-go="sec:live"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="13" rx="2.5"/><path d="M8 2.5l4 3.5 4-3.5"/></svg></div><b data-t="tv">TV en vivo</b><small id="nLive"></small></button>
+    <button class="tile f" data-go="sec:movie"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><path d="M7 3v18M17 3v18M3 8h4M3 16h4M17 8h4M17 16h4"/></svg></div><b data-t="peliculas">Películas</b><small id="nMovie"></small></button>
+    <button class="tile f" data-go="sec:series"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="19" height="13" rx="2.5"/><path d="M6 3.5h12M10 11v5l4-2.5z"/></svg></div><b data-t="series">Series</b><small id="nSeries"></small></button>
+    <button class="tile f" data-go="sec:radio"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8" width="19" height="13" rx="2.5"/><path d="M7 8l10-5"/><circle cx="15.5" cy="14.5" r="2.5"/><path d="M6 13h4M6 16.5h4"/></svg></div><b data-t="radios">Radios</b><small data-t="radiosSub">Emisoras de todo el mundo</small></button>
+  </div>
+  <div class="carril"><button class="flecha izq" type="button" aria-label="Anterior" hidden>‹</button><div class="homeBtns">
+    <button class="btn f" data-go="refrescar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg><span data-t="actualizar">Actualizar</span></button>
+    <button class="btn f" data-go="listas" id="btnListas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span data-t="cambiarLista">Cambiar lista</span><span class="nLis" id="nLis"></span></button>
+    <button class="btn f" data-go="envio" id="btnEnvio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg><span>Enviar mi lista</span></button>
+    <button class="btn f" data-go="ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 15H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 9 4.6V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span data-t="ajustes">Ajustes</span></button>
+    <button class="btn f" data-go="enlaces" id="btnEnlaces"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg><span data-t="enlaces">Enlaces</span></button>
+    <button class="btn f" data-go="soporte" id="btnSoporte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="13" width="4" height="6" rx="1.5"/><rect x="17" y="13" width="4" height="6" rx="1.5"/><path d="M19 19c0 1.5-2 2.5-5 2.5"/></svg><span data-t="soporteCorto">Soporte</span></button>
+    <button class="btn f" data-go="salir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></svg><span data-t="salir">Salir</span></button>
+  </div><button class="flecha der" type="button" aria-label="Siguiente" hidden>›</button></div>
+  <div class="pie"><div><span data-t="codigo">Código</span>: <b data-code></b></div><div data-legal></div></div>
+</section>
+
+<!-- ============ ELEGIR LISTA ============ -->
+<section class="scr" id="listas">
+  <h2 data-t="eligeLista">Elija su lista de reproducción</h2>
+  <div class="circulos" id="circulos"></div>
+</section>
+
+<!-- ============ VENTANAS ============ -->
+<div class="velo" id="vInfo"><div class="ven">
+  <h3 data-t="info">Info</h3>
+  <div id="infoFilas"></div>
+  <div class="botones"><button class="btn pri f" data-go="cerrar" data-t="cerrar">Cerrar</button></div>
+</div></div>
+<div class="velo" id="vIdioma"><div class="ven">
+  <h3 data-t="idioma">Idioma</h3>
+  <div id="idiomas" style="display:flex;flex-direction:column;gap:calc(var(--u)*1)"></div>
+</div></div>
+<div class="velo" id="vSalir"><div class="ven">
+  <h3 data-t="salirPreg">¿Salir de la aplicación?</h3>
+  <div class="botones"><button class="btn f" data-go="cerrar" data-t="no">No</button><button class="btn pri f" data-go="salirYa" data-t="si">Sí, salir</button></div>
+</div></div>
+<div id="aviso"></div>
+
+<script>
+/* ===================================================================
+   MARCA — lo ÚNICO que cambia de un revendedor a otro.
+   colors: si se borran (colors:null) la app los saca sola del icono.
+   =================================================================== */
+const BRAND = {
+  name:    'PepeTV',
+  prefix:  'PEPE',                 // empieza el código de aparato: PEPE-XXXX-XXXX
+  version: '2.8',
+  logo:    'marca/logo.png',       // logo alargado (portada y activación)
+  icon:    'marca/icono.png',      // icono cuadrado (arranque y app)
+  colors:  { c1:'#00D8F6', c2:'#0057F0', bg:'#05070C' },
+  tmdb:    '77060e802b38d2df566ac5d098a71a12',   // clave de themoviedb.org (tendencias y fichas)
+  api:     'https://script.google.com/macros/s/AKfycbwrFFqmkAbsibthw4o5HelUQayvQ7wUNuoQaeHUMOfMmwVGdJl0t6pA7D8lDhS2vke3/exec',  // panel de Google. Vacía = modo demostración
+  legal:   'PepeTV es solo un reproductor: no incluye ni vende canales ni contenidos.'
+};
+
+/* =================================================================== TEXTOS */
+const TXT = {
+  es:{comprobando:'Comprobando licencia…',codigoAparato:'Código del aparato',codigo:'Código',actualizar:'Actualizar',idioma:'Idioma',salir:'Salir',
+      tv:'TV en vivo',peliculas:'Películas',series:'Series',radios:'Radios',radiosSub:'Emisoras de todo el mundo',cambiarLista:'Cambiar lista',
+      ajustes:'Ajustes',info:'Info',cerrar:'Cerrar',salirPreg:'¿Salir de la aplicación?',si:'Sí, salir',no:'No',eligeLista:'Elija su lista de reproducción',
+      st_trial_end:'Prueba terminada',st_expired:'Licencia caducada',st_blocked:'Aparato bloqueado',st_trial:'Prueba',st_active:'Activo',
+      tit_trial_end:'Tu prueba gratuita ha terminado',tit_expired:'Tu licencia ha caducado',tit_blocked:'Este aparato está bloqueado',
+      msg_renovar:'Para seguir usando {app}, activa una licencia. Elige el plan que prefieras:',msg_blocked:'Ponte en contacto con soporte para más información.',soporte:'Contactar con soporte',soporteCorto:'Soporte',enlaces:'Enlaces',sinSoporte:'Tu proveedor aún no ha puesto un contacto de soporte',
+      ano:'1 año',anos:'10 años',masVendido:'MEJOR PRECIO',quedan:'Prueba · quedan {n} días',quedan1:'Prueba · queda 1 día',queda0:'Prueba · último día',
+      expira:'Activo · expira el {f}',listaActual:'Lista actual:',sinListas:'Todavía no tienes listas. Envía tu código a tu proveedor para que te las cargue.',
+      canales:'{n} canales',pelis:'{n} películas',seriesN:'{n} series',enObras:'Esta sección la estamos montando',ajustesPronto:'Los ajustes llegan en la siguiente versión',
+      sinConexion:'Sin conexión con el servidor de licencias. Se usa el último estado guardado.',errConexion:'No se puede comprobar la licencia. Revisa la conexión a internet.',
+      estado:'Estado',fin:'Válido hasta',version:'Versión',sistema:'Sistema',listasN:'Listas',demo:'Modo demostración',salirWeb:'En el navegador cierra la pestaña para salir'},
+  en:{comprobando:'Checking license…',codigoAparato:'Device code',codigo:'Code',actualizar:'Refresh',idioma:'Language',salir:'Exit',
+      tv:'Live TV',peliculas:'Movies',series:'Series',radios:'Radio',radiosSub:'Stations worldwide',cambiarLista:'Change playlist',
+      ajustes:'Settings',info:'Info',cerrar:'Close',salirPreg:'Exit the app?',si:'Yes, exit',no:'No',eligeLista:'Choose your playlist',
+      st_trial_end:'Trial ended',st_expired:'License expired',st_blocked:'Device blocked',st_trial:'Trial',st_active:'Active',
+      tit_trial_end:'Your free trial has ended',tit_expired:'Your license has expired',tit_blocked:'This device is blocked',
+      msg_renovar:'To keep using {app}, activate a license. Choose your plan:',msg_blocked:'Please contact support for more information.',soporte:'Contact support',soporteCorto:'Support',enlaces:'Links',sinSoporte:'Your provider has not set a support contact yet',
+      ano:'1 year',anos:'10 years',masVendido:'BEST VALUE',quedan:'Trial · {n} days left',quedan1:'Trial · 1 day left',queda0:'Trial · last day',
+      expira:'Active · expires {f}',listaActual:'Current playlist:',sinListas:'No playlists yet. Send your code to your provider so they can load them.',
+      canales:'{n} channels',pelis:'{n} movies',seriesN:'{n} series',enObras:'This section is under construction',ajustesPronto:'Settings arrive in the next version',
+      sinConexion:'License server unreachable. Using last saved status.',errConexion:'Cannot check the license. Check your internet connection.',
+      estado:'Status',fin:'Valid until',version:'Version',sistema:'System',listasN:'Playlists',demo:'Demo mode',salirWeb:'In a browser, close the tab to exit'}
+};
+const IDIOMAS = [['es','Español'],['en','English']];
+
+/* =================================================================== UTILIDADES */
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const guarda = (k,v) => { try{ localStorage.setItem('ptv_'+k, JSON.stringify(v)); }catch(e){} };
+const lee = (k,d) => { try{ const v = localStorage.getItem('ptv_'+k); return v==null ? d : JSON.parse(v); }catch(e){ return d; } };
+let LANG = lee('lang', 'es'); if(!TXT[LANG]) LANG = 'es';
+const t = (k,o) => { let s = (TXT[LANG][k] ?? TXT.es[k] ?? k); for(const x in (o||{})) s = s.replace('{'+x+'}', o[x]); return s; };
+const fecha = ms => new Date(ms).toLocaleDateString(LANG==='es'?'es-ES':'en-GB',{day:'2-digit',month:'2-digit',year:'numeric'});
+const esc = s => String(s??'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let tAviso; function aviso(m){ const a=$('#aviso'); a.textContent=m; a.classList.add('on'); clearTimeout(tAviso); tAviso=setTimeout(()=>a.classList.remove('on'),3200); }
+
+/* =================================================================== COLORES DESDE EL LOGO */
+function ponColores(c){ const h=document.documentElement, r=h.style; r.setProperty('--c1',c.c1); r.setProperty('--c2',c.c2); if(c.bg){ h.dataset.bgo=c.bg; if(h.dataset.tema!=='claro') r.setProperty('--bg',c.bg); } }
+function coloresDelLogo(src){
+  return new Promise(ok => {
+    const img = new Image(); img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try{
+        const W=120, H=Math.round(120*img.height/img.width), cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+        const x=cv.getContext('2d'); x.drawImage(img,0,0,W,H); const d=x.getImageData(0,0,W,H).data, vivos=[];
+        for(let i=0;i<d.length;i+=4){
+          if(d[i+3]<200) continue;
+          const r=d[i]/255,g=d[i+1]/255,b=d[i+2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,s=mx===mn?0:(mx-mn)/(1-Math.abs(2*l-1));
+          if(s>.45 && l>.25 && l<.8) vivos.push([d[i],d[i+1],d[i+2],l]);
+        }
+        if(vivos.length<20) return ok(null);
+        vivos.sort((a,b)=>b[3]-a[3]);
+        const media = arr => '#'+[0,1,2].map(k=>Math.round(arr.reduce((s,p)=>s+p[k],0)/arr.length).toString(16).padStart(2,'0')).join('');
+        const q = Math.max(1,Math.floor(vivos.length/4));
+        ok({ c1: media(vivos.slice(0,q)), c2: media(vivos.slice(-q)) });   // el más claro y el más oscuro del logo
+      }catch(e){ ok(null); }
+    };
+    img.onerror = () => ok(null); img.src = src;
+  });
+}
+
+/* =================================================================== CÓDIGO DEL APARATO */
+function codigoAparato(){
+  let c = lee('code');
+  if(!c){
+    const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', n=new Uint8Array(8); crypto.getRandomValues(n);
+    const p = [...n].map(v=>A[v%A.length]).join('');
+    c = BRAND.prefix+'-'+p.slice(0,4)+'-'+p.slice(4);
+    guarda('code', c);
+  }
+  return c;
+}
+let CODE = codigoAparato();
+/* 2.6: clave secreta del aparato (no sale en pantalla). Con ella el panel sabe que es este aparato y no otro con el mismo código.
+   En Android y en el programa de Windows sale del propio aparato (no se pierde al reinstalar); en el navegador se guarda aquí. */
+let SEC = lee('sec', '');
+if(!SEC || SEC.length < 16){ const n = new Uint8Array(20); crypto.getRandomValues(n); SEC = [...n].map(v => v.toString(16).padStart(2, '0')).join(''); guarda('sec', SEC); }
+async function derivaClave(id){
+  const txt = id + '|pepetv-clave-2.6';
+  try{ const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt)); return [...new Uint8Array(h)].map(v => v.toString(16).padStart(2, '0')).join('').slice(0, 40); }
+  catch(e){ let a = 0x811c9dc5, b = 0x1b873593, c = 0x9e3779b1; for(const ch of txt){ const k = ch.charCodeAt(0); a = Math.imul(a ^ k, 16777619); b = Math.imul(b ^ k, 2654435761); c = Math.imul(c ^ k, 2246822519); }
+    return [a, b, c, a ^ c, b ^ a].map(x => (x >>> 0).toString(16).padStart(8, '0')).join(''); }
+}
+/* En Android el código sale del propio aparato: si desinstalan y vuelven a instalar,
+   el código es el mismo (no se regala otra prueba y no se pierde la licencia). */
+async function codigoNativo(){
+  try{
+    /* programa de Windows (pc/): el identificador fijo del ordenador */
+    let id = '';
+    if(window.PepePC && window.PepePC.id) id = String(await window.PepePC.id() || '');
+    else {
+      const C = window.Capacitor, D = C && C.isNativePlatform && C.isNativePlatform() && C.Plugins && C.Plugins.Device;
+      if(!D) return;
+      const r = await D.getId(); id = String((r && (r.identifier || r.uuid)) || '');
+    }
+    if(!id) return;
+    SEC = await derivaClave(id);
+    let a = 0x811c9dc5, b = 0x9e3779b1;
+    for(const ch of id + '|pepetv'){ const k = ch.charCodeAt(0); a = Math.imul(a ^ k, 16777619); b = Math.imul(b ^ k, 2246822519); }
+    const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let x = a >>> 0, y = b >>> 0, s = '';
+    for(let i=0;i<4;i++){ s += A[x % 32]; x = Math.floor(x / 32); }
+    for(let i=0;i<4;i++){ s += A[y % 32]; y = Math.floor(y / 32); }
+    CODE = BRAND.prefix + '-' + s.slice(0,4) + '-' + s.slice(4);
+    guarda('code', CODE);
+  }catch(e){}
+}
+function sistema(){
+  const u=navigator.userAgent;
+  if(/AFT/i.test(u)) return 'Fire TV'; if(/Android TV|; ?TV|BRAVIA|SMART-TV/i.test(u)) return 'Android TV';
+  if(/Android/i.test(u)) return 'Android'; if(/iPhone|iPad/i.test(u)) return 'iOS';
+  if(window.PepePC) return /Windows/i.test(u) ? 'Windows (programa)' : 'PC (programa)';
+  if(/Windows/i.test(u)) return 'Windows'; if(/Mac/i.test(u)) return 'Mac'; return 'Web';
+}
+
+/* =================================================================== LICENCIA */
+let LIC = null;            // {st,end,plan,prices,contact,lists}
+async function pideLicencia(){
+  if(!BRAND.api) return licenciaDemo();
+  const q = new URLSearchParams({a:'lic', d:CODE, s:SEC, b:BRAND.name, v:BRAND.version, sys:sistema(), cc:(navigator.language||'').slice(-2).toUpperCase()});
+  if(typeof MI_IP !== 'undefined' && MI_IP) q.set('ip', MI_IP);
+  const ctl = new AbortController(), tm = setTimeout(()=>ctl.abort(), 15000);
+  try{
+    const r = await fetch(BRAND.api+'?'+q, {signal:ctl.signal}); const j = await r.json();
+    if(!j.ok) throw new Error(j.err||'error');
+    guarda('lic', j);
+    if(j.secKo) setTimeout(() => aviso('Este aparato no está verificado. Contacta con tu proveedor para que lo active.'), 2500);   // 2.6
+    return j;
+  }catch(e){
+    const v = lee('lic');
+    if(v){ aviso(t('sinConexion')); return v; }
+    throw e;
+  }finally{ clearTimeout(tm); }
+}
+/* Sin panel conectado: la app se comporta igual, contando 7 días desde la primera vez.
+   Para ver otras pantallas: index.html?estado=expired | trial_end | blocked | active */
+function licenciaDemo(){
+  let alta = lee('demo_alta'); if(!alta){ alta = Date.now(); guarda('demo_alta', alta); }
+  const forzado = new URLSearchParams(location.search).get('estado');
+  let st = Date.now() < alta+7*864e5 ? 'trial' : 'trial_end', end = alta+7*864e5;
+  if(forzado){ st = forzado; end = st==='active' ? Date.now()+300*864e5 : Date.now()-864e5; }
+  return { ok:true, demo:true, st, end, plan: st.startsWith('trial')?'PRUEBA':'1 AÑO',
+    prices:[['10 €','1 año'],['25 €','10 años']], contact:'Envía este código a tu proveedor para activar el aparato.',
+    lists: (st==='trial'||st==='active') ? [{name:'Lista principal',type:'link',url:''},{name:'Deportes',type:'link',url:''}] : [] };
+}
+
+/* =================================================================== "ESTOY ENCENDIDO" (luz verde del panel)
+   Cada 2 minutos, mientras la app está abierta y a la vista, avisa al panel y dice qué se está viendo. */
+function queVe(){
+  try{
+    if (typeof SF !== 'undefined' && SF.abierta && SF.it) return 'Serie: ' + SF.it.n + (SF.ep ? ' T' + SF.ep.t + 'E' + SF.ep.e : '');
+    if (typeof PF !== 'undefined' && PF.abierta && PF.it) return 'Película: ' + PF.it.n;
+    if (typeof S !== 'undefined' && S.jugando && $('#sec').classList.contains('on')) return ({ live:'TV', radio:'Radio' }[S.tipo] || '') + ': ' + S.jugando.n;
+    const on = $('.scr.on'); return on ? ({ home:'En la portada', act:'Pantalla de activación', listas:'Eligiendo lista', sec:'Mirando el menú' }[on.id] || '') : '';
+  }catch(e){ return ''; }
+}
+let tPing = null, ultPing = 0;
+/* 1.7: la IP pública desde la que se conecta (para verla en el panel). Se pide al arrancar y cada 30 min. */
+let MI_IP = '', ipAt = 0;
+function sacaIp(){
+  if (Date.now() - ipAt < 30 * 60e3 && MI_IP) return; ipAt = Date.now();
+  fetch('https://api.ipify.org?format=json').then(r => r.json()).then(j => { if (j && j.ip) MI_IP = String(j.ip); }).catch(() => {});
+}
+sacaIp();
+/* 2.8: para el panel, cuándo caduca la lista de canales que tiene puesta (la da el servidor del proveedor) */
+function infoLista(){
+  try { if (typeof LISTA === 'undefined' || !LISTA || typeof listaActual !== 'function') return ''; const l = listaActual(); if (!l) return '';
+    return '&le=' + (LISTA.exp ? Math.round(LISTA.exp) : 0) + '&ln=' + encodeURIComponent(String(l.name || '').slice(0, 40)); } catch (e) { return ''; }
+}
+function ping(){
+  if (!BRAND.api || document.hidden) return;
+  ultPing = Date.now(); sacaIp();
+  const vis = typeof avisosPorConfirmar !== 'undefined' ? avisosPorConfirmar.slice() : [];      // avisos ya enseñados: se le dice al panel
+  fetch(BRAND.api + '?a=ping&d=' + encodeURIComponent(CODE) + '&s=' + encodeURIComponent(SEC) + '&w=' + encodeURIComponent(queVe()) + (vis.length ? '&vis=' + encodeURIComponent(vis.join(',')) : '') + (MI_IP ? '&ip=' + encodeURIComponent(MI_IP) : '') + infoLista())
+    .then(r => r.json()).then(j => {
+      if (vis.length) avisosPorConfirmar.splice(0, vis.length);
+      if (j && j.avisos && typeof muestraAvisos === 'function') muestraAvisos(j.avisos);
+      if (j && Array.isArray(j.ban) && typeof LIC !== 'undefined' && LIC) { const nb = JSON.stringify(j.ban); if (nb !== JSON.stringify(LIC.banners || [])) { LIC.banners = j.ban; if (typeof pintaBanners === 'function') pintaBanners(); } }
+      /* botón de emergencia del panel: si cambia, se vuelven a pedir las listas (en menos de un minuto) */
+      if (j && j.em !== undefined && LIC && (j.em ? 1 : 0) !== (LIC.em ? 1 : 0)) { LIC.em = j.em; if (typeof paraVideo === 'function') { try { pantallaCompleta(false); paraVideo(); } catch (e) {} } LISTA = null; arranca(true); } }).catch(() => {});
+}
+function pingPronto(){ clearTimeout(tPing); tPing = setTimeout(ping, Date.now() - ultPing > 30000 ? 4000 : 30000); }
+setInterval(ping, 60000);          // cada minuto: luz verde del panel y avisos
+document.addEventListener('visibilitychange', () => { if (!document.hidden) ping(); });
+
+/* =================================================================== SOPORTE: WhatsApp (o llamada) con el mensaje ya escrito */
+function abreFuera(url){
+  const C = window.Capacitor;
+  if (C && C.isNativePlatform && C.isNativePlatform()) location.href = url;   // la app lo abre en WhatsApp / teléfono / navegador
+  else window.open(url, '_blank');
+}
+function contactaSoporte(motivo){
+  const s = (LIC && LIC.support) || {};
+  if (!s.wa && !s.tel) { aviso(t('sinSoporte')); return; }
+  const m = !motivo ? (LIC && LIC.st === 'blocked' ? 'bloq' : LIC && (LIC.st === 'expired' || LIC.st === 'trial_end') ? 'cad' : 'gen') : motivo;
+  const txt = String(s[m] || s.gen || '').replace(/\{codigo\}/g, CODE);
+  if (s.wa) abreFuera('https://wa.me/' + s.wa + '?text=' + encodeURIComponent(txt));
+  else abreFuera('tel:' + s.tel);
+}
+
+/* =================================================================== FLECHAS DE LA FILA DE BOTONES */
+function flechasCarril(){
+  $$('.carril').forEach(c => { const f = c.querySelector('.homeBtns'), iz = c.querySelector('.izq'), de = c.querySelector('.der');
+    iz.hidden = f.scrollLeft < 4; de.hidden = f.scrollLeft + f.clientWidth >= f.scrollWidth - 4; });
+}
+document.addEventListener('click', e => { const b = e.target.closest('.flecha'); if (!b) return;
+  const f = b.parentNode.querySelector('.homeBtns'); if (!f) return; f.scrollBy({ left: (b.classList.contains('izq') ? -1 : 1) * f.clientWidth * .7, behavior:'smooth' }); });
+document.addEventListener('scroll', e => { if (e.target.classList && e.target.classList.contains('homeBtns')) flechasCarril(); }, true);
+addEventListener('resize', flechasCarril);
+
+/* =================================================================== PANTALLAS */
+let pila = [];
+function muestra(id, guardaPila=true){
+  const cur = $('.scr.on'); if(cur && guardaPila && cur.id!=='splash') pila.push(cur.id);
+  $$('.scr').forEach(s=>s.classList.toggle('on', s.id===id));
+  enfocaPrimero($('#'+id));
+}
+function atras(){
+  const v = $('.velo.on'); if(v){ cierraVentana(); return; }
+  const cur = $('.scr.on').id;
+  if(cur==='home' || cur==='act'){ abreVentana('vSalir'); return; }
+  muestra(pila.pop() || 'home', false);
+}
+
+function pintaTextos(){
+  $$('[data-t]').forEach(e=>e.textContent=t(e.dataset.t));
+  $$('[data-code]').forEach(e=>e.textContent=CODE);
+  $$('[data-legal]').forEach(e=>e.textContent=BRAND.legal);
+  $$('[data-version]').forEach(e=>e.textContent='v'+BRAND.version+(LIC&&LIC.demo?' · '+t('demo'):''));
+  document.documentElement.lang = LANG;
+}
+
+function pintaActivacion(){
+  const st = LIC.st, ok = st==='trial'||st==='active';
+  $('#actEstado').className = 'actEstado'+(ok?' ok':'');
+  $('#actEstado span').textContent = t('st_'+st);
+  const bloq = st==='blocked';
+  $('#actTit').textContent = bloq ? '' : t('tit_'+st);          // bloqueado: el aviso rojo ya lo dice, no se repite
+  $('#actTit').hidden = bloq;
+  const sop = (LIC.support || {}), hay = !!(sop.wa || sop.tel);
+  $('#actSop').hidden = !hay;
+  $('#actAct').classList.toggle('pri', !hay);
+  $('#actMsg').textContent = bloq ? t('msg_blocked') : t('msg_renovar',{app:BRAND.name});
+  $('#planes').style.display = bloq ? 'none' : '';
+  $('#planes').innerHTML = (LIC.prices||[]).map((p,i)=>
+    `<div class="plan${i===1?' dest':''}">${i===1?`<div class="tag">${t('masVendido')}</div>`:''}<div class="pre">${esc(p[0])}</div><div class="dur">${i===0?t('ano'):t('anos')}</div></div>`).join('');
+  $('#actContacto').textContent = LIC.contact || '';
+  $('#actFecha').textContent = fecha(Date.now());
+}
+
+function pintaPortada(){
+  const p = $('#pastilla'), dias = Math.ceil((LIC.end-Date.now())/864e5);
+  if(LIC.st==='trial'){ p.className='pastilla prueba'; p.querySelector('span').textContent = dias>1?t('quedan',{n:dias}):dias===1?t('quedan1'):t('queda0'); }
+  else { p.className='pastilla'; p.querySelector('span').textContent = t('expira',{f:fecha(LIC.end)}); }
+  const L = LIC.lists||[], i = Math.min(lee('lista',0), Math.max(0,L.length-1));
+  $('#listaAct').innerHTML = L.length ? `${t('listaActual')} <b>${esc(L[i].name)}</b>` : t('sinListas');
+  $('#btnListas').style.display = L.length>1 ? '' : 'none'; $('#nLis').textContent = L.length>1 ? '('+L.length+')' : '';
+  const rL=document.querySelector('#rail [data-r="listas"]'); if(rL) rL.dataset.tip = t('cambiarLista') + (L.length>1 ? ' ('+L.length+')' : '');
+  const sp=(LIC.support||{}); $('#btnSoporte').style.display = (sp.wa||sp.tel) ? '' : 'none';
+  $('#btnEnlaces').style.display = (LIC.links||[]).length ? '' : 'none';
+  ['nLive','nMovie','nSeries'].forEach(id=>$('#'+id).textContent=''); $$('.vacia').forEach(x=>x.classList.remove('vacia'));
+  if(typeof LISTA!=='undefined' && LISTA && L.length && LISTA.key===claveLista(L[i])) contadores();
+  requestAnimationFrame(flechasCarril);
+}
+
+function pintaListas(){
+  const L = LIC.lists||[], sel = lee('lista',0);
+  $('#circulos').innerHTML = L.map((l,i)=>`<button class="circ f${i===sel?' sel':''}" data-go="usaLista:${i}">
+    <div class="bola">${esc((l.name||'?').trim().charAt(0).toUpperCase())}</div><span>${esc(l.name)}</span><small>${esc(l.type==='xtream'?'Xtream':l.type==='file'?'M3U':'URL')}</small></button>`).join('');
+}
+
+/* 2.6: en la web (iPhone/navegador) el aparato solo se da de alta cuando una persona pulsa «Empezar» (los robots no lo hacen) */
+const esNativa = () => !!(window.PepePC || (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()));
+function esperaPersona(){
+  if (esNativa() || lee('lic') || lee('humano')) return Promise.resolve();
+  return new Promise(ok => {
+    const st = $('#splashTxt'); st.textContent = '';
+    st.insertAdjacentHTML('afterend', '<button class="btn pri f" id="bEmpezar" style="margin:calc(var(--u)*2) auto 0;font-size:calc(var(--u)*var(--ft)*1.6);padding:calc(var(--u)*1.2) calc(var(--u)*4)">Empezar</button>');
+    const b = $('#bEmpezar'); try { b.focus(); } catch (e) {}
+    b.onclick = () => { guarda('humano', 1); b.remove(); st.textContent = 'Conectando…'; ok(); };
+  });
+}
+async function arranca(forzar){
+  pintaTextos();
+  muestra('splash', false);
+  await esperaPersona();
+  try{ LIC = await pideLicencia(); }
+  catch(e){ $('#splashTxt').textContent = t('errConexion'); setTimeout(arranca, 8000); return; }
+  if (LIC.pinReset) { guarda('pin_h', ''); delete LIC.pinReset; guarda('lic', LIC); setTimeout(() => aviso('Tu proveedor ha quitado el PIN de control parental'), 800); }
+  if (LIC.reset) {           // el proveedor ha pedido dejar la app como recién instalada (código y licencia se quedan)
+    const cod = lee('code'); delete LIC.reset;
+    try { localStorage.clear(); } catch (e) {} try { indexedDB.deleteDatabase('pepetv'); } catch (e) {}
+    if (cod) guarda('code', cod); guarda('sec', SEC); guarda('humano', 1); guarda('lic', LIC);   // la clave del aparato se conserva
+    $('#splashTxt').textContent = 'Tu proveedor ha reiniciado la app…'; setTimeout(() => location.reload(), 1500); return;
+  }
+  pintaTextos();
+  pila = []; ping();
+  if (LIC.avisos && typeof muestraAvisos === 'function') setTimeout(() => muestraAvisos(LIC.avisos), 1200);
+  if(LIC.st==='trial' || LIC.st==='active'){ pintaPortada(); muestra('home', false); precargaLista(forzar).catch(()=>{}); }
+  else { pintaActivacion(); muestra('act', false); }
+}
+
+/* =================================================================== VENTANAS */
+let focoAntes = null;
+function abreVentana(id){ focoAntes = document.activeElement; $('#'+id).classList.add('on'); enfocaPrimero($('#'+id)); }
+function cierraVentana(){ $$('.velo.on').forEach(v=>v.classList.remove('on')); if(focoAntes) enfoca(focoAntes); }
+function abreInfo(){
+  const f = [[t('codigoAparato'),CODE],[t('estado'),t('st_'+LIC.st)],[t('fin'),fecha(LIC.end)],[t('listasN'),(LIC.lists||[]).length],
+             [t('version'),BRAND.version],[t('sistema'),sistema()]];
+  $('#infoFilas').innerHTML = f.map(x=>`<div class="fila"><span>${esc(x[0])}</span><b>${esc(x[1])}</b></div>`).join('');
+  abreVentana('vInfo');
+}
+function abreIdioma(){
+  $('#idiomas').innerHTML = IDIOMAS.map(([k,n])=>`<button class="opc f${k===LANG?' sel':''}" data-go="lang:${k}">${n}</button>`).join('');
+  abreVentana('vIdioma');
+}
+
+/* =================================================================== ACCIONES */
+function accion(go){
+  const [a,arg] = go.split(':');
+  switch(a){
+    case 'refrescar': cierraVentana(); arranca(true); break;
+    case 'soporte': contactaSoporte(arg); break;
+    case 'idioma': abreIdioma(); break;
+    case 'lang': LANG=arg; guarda('lang',arg); cierraVentana(); pintaTextos();
+                 if($('#act').classList.contains('on')) pintaActivacion(); else pintaPortada(); break;
+    case 'info': abreInfo(); break;
+    case 'ajustes': aviso(t('ajustesPronto')); break;
+    case 'listas': pintaListas(); muestra('listas'); break;
+    case 'usaLista': guarda('lista', +arg); LISTA=null; precargaLista().catch(()=>{}); pintaPortada(); muestra('home', false); pila=[]; break;
+    case 'sec': abreSeccion(arg); break;
+    case 'secReintentar': LISTA=null; cargaEnCurso=null; $('#scarga').classList.remove('on'); abreSeccion(S.tipo); break;
+    case 'secVolver': $('#scarga').classList.remove('on'); salSeccion(); break;
+    case 'buscarYa': buscarYa(); break;
+    case 'pf': (typeof SF !== 'undefined' && SF.abierta ? accionSerie : accionPeli)(arg); break;
+    case 'ap': { const q = go.split(':'); accionApar(q[1], q[2]); break; }
+    case 'ps': { const q = go.split(':'); accionSerie(q[1], q[2]); break; }
+    case 'salir': abreVentana('vSalir'); break;
+    case 'salirYa': salir(); break;
+    case 'cerrar': cierraVentana(); break;
+  }
+}
+function salir(){
+  const C = window.Capacitor;
+  if(C && C.Plugins && C.Plugins.App) return C.Plugins.App.exitApp();
+  if(navigator.app && navigator.app.exitApp) return navigator.app.exitApp();
+  cierraVentana(); window.close(); setTimeout(()=>aviso(t('salirWeb')),300);
+}
+document.addEventListener('click', e=>{ const b=e.target.closest('[data-go]'); if(b) accion(b.dataset.go); });
+
+/* =================================================================== MANDO A DISTANCIA */
+function zonaActiva(){ return $('.velo.on') || $('.scr.on'); }
+function enfocables(z){ return [...z.querySelectorAll('.f')].filter(e=>e.offsetParent!==null); }
+function enfoca(e){ if(!e) return; $$('.kf').forEach(x=>x.classList.remove('kf')); e.focus({preventScroll:false}); e.classList.add('kf'); }
+function enfocaPrimero(z){ requestAnimationFrame(()=>enfoca(z.querySelector('.sel.f') || z.querySelector('.f.pri') || enfocables(z)[0])); }
+function mueve(dir){
+  const z = zonaActiva(), todos = enfocables(z), cur = document.activeElement;
+  if(!todos.includes(cur)) return enfocaPrimero(z);
+  const a = cur.getBoundingClientRect(), ax=a.left+a.width/2, ay=a.top+a.height/2;
+  let mejor=null, pm=Infinity;
+  for(const e of todos){
+    if(e===cur) continue;
+    const b=e.getBoundingClientRect(), bx=b.left+b.width/2, by=b.top+b.height/2, dx=bx-ax, dy=by-ay;
+    const ok = dir==='l'?dx<-4:dir==='r'?dx>4:dir==='u'?dy<-4:dy>4; if(!ok) continue;
+    const prin = dir==='l'||dir==='r' ? Math.abs(dx) : Math.abs(dy), lat = dir==='l'||dir==='r' ? Math.abs(dy) : Math.abs(dx);
+    const p = prin + lat*2.5; if(p<pm){ pm=p; mejor=e; }
+  }
+  if(mejor) enfoca(mejor);
+}
+document.addEventListener('keydown', e=>{
+  if(typeof teclaSeccion==='function' && teclaSeccion(e)) return;
+  const k = e.key, c = e.keyCode;
+  const d = {ArrowLeft:'l',ArrowRight:'r',ArrowUp:'u',ArrowDown:'d'}[k];
+  if(d){ e.preventDefault(); mueve(d); return; }
+  if(k==='Escape' || k==='Backspace' || k==='GoBack' || c===10009 || c===461 || c===4){ e.preventDefault(); atras(); return; }
+  if(k==='Enter' && document.activeElement && document.activeElement.dataset.go){ e.preventDefault(); accion(document.activeElement.dataset.go); }
+});
+document.addEventListener('mousedown', ()=>$$('.kf').forEach(x=>x.classList.remove('kf')));
+// botón atrás del móvil dentro de la APK
+/* botón "atrás" del móvil o de la tele: hace exactamente lo mismo que la tecla Atrás del mando
+   (así sale de pantalla completa, de la ficha, de la sección… en el orden correcto) */
+function atrasMovil(){ document.dispatchEvent(new KeyboardEvent('keydown', { key:'Escape', bubbles:true, cancelable:true })); }
+document.addEventListener('backbutton', e=>{ e.preventDefault(); atrasMovil(); }, false);
+try{ window.Capacitor?.Plugins?.App?.addListener('backButton', ()=>atrasMovil()); }catch(e){}
+
+/* =================================================================== RELOJ */
+function reloj(){ const s = new Date().toLocaleTimeString(LANG==='es'?'es-ES':'en-GB',{hour:'2-digit',minute:'2-digit'}); $$('[data-clock]').forEach(e=>e.textContent=s); }
+setInterval(reloj, 10000); reloj();
+
+/* =================================================================== INICIO */
+addEventListener('DOMContentLoaded', async ()=>{
+  $$('[data-logo]').forEach(i=>i.src=BRAND.logo);
+  $$('[data-icon]').forEach(i=>i.src=BRAND.icon);
+  document.title = BRAND.name;
+  ponColores(BRAND.colors || await coloresDelLogo(BRAND.icon) || {c1:'#00D8F6',c2:'#0057F0'});
+  await codigoNativo();
+  arranca();
+});
+</script>
+<!-- reproductores de vídeo: van dentro de la APK; si no están (pruebas en PC) se bajan de internet -->
+<script src="lib/hls.min.js"></script>
+<script src="lib/mpegts.js"></script>
+<script>
+(function(){ function carga(u){ var x=document.createElement('script'); x.src=u; document.head.appendChild(x); }
+  if(!window.Hls) carga('https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js');
+  if(!window.mpegts) carga('https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.js'); })();
+</script>
+<script src="js/listas.js"></script>
+<script src="js/seccion.js"></script>
+<script src="js/radios.js"></script>
+<script src="js/peliculas.js"></script>
+<script src="js/series.js"></script>
+<script src="js/apariencia.js"></script>
+<script src="js/nativo.js"></script>
+<script src="js/ajustes.js"></script>
+<script src="js/buscador.js"></script>
+<script src="js/asistencia.js"></script>
+<script src="js/portada.js"></script>
+<script src="js/ordenar.js"></script>
+<script src="js/envio.js"></script>
+<script src="js/uso.js"></script>
+<script src="js/protege.js"></script>
+<script src="js/barra.js"></script>
+<script src="js/estado.js"></script>
+<script src="js/vista.js"></script>
+<script src="js/tip.js"></script>
+<script src="js/pistas.js"></script>
+<script src="js/pc.js"></script>
+<script src="js/ios.js"></script>
+<script src="js/descarga.js"></script>
+</body>
+</html>
