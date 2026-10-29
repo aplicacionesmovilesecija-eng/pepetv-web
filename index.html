@@ -1,700 +1,665 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta name="robots" content="noindex, nofollow">
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>PepeTV</title>
-<link rel="icon" href="marca/icono.png">
-<!-- iPhone / iPad: se instala desde Safari con "Compartir → Añadir a pantalla de inicio" -->
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="marca/icono-ios-180.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="PepeTV">
-<meta name="theme-color" content="#05070C">
-<script>window.IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);</script>
-<script>/* 2.6: en la web pepe-tv.com siempre por http (los canales IPTV van por http y una web https no deja reproducirlos) */
-if (location.protocol === 'https:' && /(^|\.)pepe-tv\.com$/i.test(location.hostname)) {
-  let n = 0; try { n = +sessionStorage.getItem('ptv_ahttp') || 0; sessionStorage.setItem('ptv_ahttp', n + 1); } catch (e) {}
-  if (n < 2) location.replace('http://' + location.host + location.pathname + location.search + location.hash);   // si GitHub volviera a obligar https, no se queda saltando
-}</script>
+<script>/* Quien tenía PepeTV en la pantalla de inicio del iPhone (antes en pepe-tv.com) va directo a la app */
+try { if (navigator.standalone || matchMedia('(display-mode: standalone)').matches) location.replace('app/' + location.search + location.hash); } catch (e) {}</script>
+<meta name="description" content="PepeTV, el reproductor para tus listas M3U y Xtream en Android, Windows, TV Box y Fire TV. Prueba gratis 7 días.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,700&display=swap" rel="stylesheet">
 <style>
-/* ===================================================================
-   COLORES: los pone la marca (BRAND.colors). Si se dejan vacíos,
-   la app los saca sola del logo. No tocar aquí.
-   =================================================================== */
+/* Layout: banda de portada con portátil+móvil de la app, luego secciones en columna de 1200px; marca PepeTV fija en oscuro */
 :root{
-  --c1:#00D8F6; --c2:#0057F0; --bg:#05070C;
-  --bg2:#0B1019; --card:#101826; --card2:#162133;
-  --line:rgba(255,255,255,.08); --txt:#F3F7FC; --mut:#8C9AB0;
-  --ok:#22C55E; --warn:#F5A524; --bad:#EF4444;
-  --grad:linear-gradient(135deg,var(--c1),var(--c2));
-  --u:min(1vw,1.78vh);
-  --ft:1;                        /* tamaño del texto (botón Aa) */           /* unidad que escala igual en móvil y TV */
+  color-scheme:dark;
+  --bg:#05070C; --bg-2:#070B13; --card:#0B111C; --card-2:#0A1830;
+  --line:#141C2B; --line-2:#22304A;
+  --fg:#E8EEF7; --fg-2:#B7C3D6; --fg-3:#8E9BB0; --white:#FFFFFF;
+  --cyan:#00D8F6; --cyan-2:#7FEBFA; --blue:#0057F0; --ink:#04121A;
+  --green:#3DDC84; --wa:#25D366; --gold:#FFC83D;
+  --grad:linear-gradient(135deg,var(--cyan),var(--blue));
+  --f-display:'Sora',system-ui,sans-serif;
+  --f-body:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
 }
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:var(--bg);color:var(--txt);
-  font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;overflow:hidden;user-select:none}
-body{background:
-  radial-gradient(ellipse 70% 60% at 85% -10%,color-mix(in srgb,var(--c2) 22%,transparent),transparent 70%),
-  radial-gradient(ellipse 60% 50% at -10% 110%,color-mix(in srgb,var(--c1) 14%,transparent),transparent 70%),
-  var(--bg)}
-button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
-.scr{position:fixed;inset:0;display:none;flex-direction:column}
-.scr.on{display:flex}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:17px;line-height:1.55;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+a{color:var(--cyan)}a:hover{color:var(--cyan-2)}
+:focus-visible{outline:3px solid var(--cyan);outline-offset:3px;border-radius:6px}
+h1,h2,h3{font-family:var(--f-display);color:var(--white);margin:0;text-wrap:balance}
+h2{font-weight:800;font-size:clamp(28px,4vw,44px);letter-spacing:-1px;line-height:1.1}
+h3{font-size:19px;line-height:1.25}
+p{margin:0}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sec{padding-block:88px 24px;display:flex;flex-direction:column;gap:36px}
+.head{display:flex;flex-direction:column;gap:12px;max-width:680px}
+.head p{color:var(--fg-2);font-size:18px}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;font-weight:700;padding:15px 24px;border-radius:12px;font-size:16px;border:1px solid transparent;cursor:pointer;font-family:inherit;line-height:1.2}
+.btn-main{background:var(--grad);color:var(--white)}.btn-main:hover{color:var(--white);filter:brightness(1.1)}
+.btn-ghost{border-color:var(--line-2);color:var(--fg);background:transparent}.btn-ghost:hover{color:var(--white);border-color:var(--cyan)}
+.btn-wa{background:var(--wa);color:#062712}.btn-wa:hover{color:#062712;filter:brightness(1.07)}
+.tick{display:flex;align-items:center;gap:8px}
+.tick svg{flex:none}
 
-/* foco del mando */
-.f{outline:none;transition:transform .15s,box-shadow .15s,background .15s,border-color .15s}
-.f:focus-visible,.f.kf{box-shadow:0 0 0 calc(var(--u)*.3) var(--c1),0 0 calc(var(--u)*2.4) color-mix(in srgb,var(--c1) 55%,transparent);transform:scale(1.04)}
+/* CABECERA */
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:rgba(5,7,12,.93);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px 26px;padding-block:12px}
+.bar .logo img{height:42px;width:auto;display:block}
+.bar nav{display:flex;flex-wrap:wrap;gap:4px 20px;flex:1 1 auto;font-size:15px}
+.bar nav a{color:var(--fg-2);text-decoration:none}.bar nav a:hover{color:var(--white)}
+.bar .btn{padding:11px 18px;font-size:15px}
+@media (max-width:860px){.bar nav{order:3;flex-basis:100%;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.bar nav a{white-space:nowrap}.bar .btn{margin-left:auto}}
+@media (max-width:420px){.bar .logo img{height:34px}.bar .btn{padding:10px 12px;font-size:14px}}
 
-/* ---------- arranque ---------- */
-#splash{align-items:center;justify-content:center;gap:calc(var(--u)*4)}
-#splash img{width:calc(var(--u)*22);animation:lat 1.6s ease-in-out infinite}
-@keyframes lat{50%{transform:scale(1.06);filter:drop-shadow(0 0 calc(var(--u)*3) var(--c1))}}
-.barra{width:calc(var(--u)*24);height:calc(var(--u)*.5);border-radius:9px;background:var(--line);overflow:hidden}
-.barra i{display:block;height:100%;width:40%;background:var(--grad);border-radius:9px;animation:car 1.1s ease-in-out infinite}
-@keyframes car{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
-#splashTxt{color:var(--mut);font-size:calc(var(--u)*var(--ft)*1.5)}
+/* PORTADA */
+.hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+.hero::before{content:"";position:absolute;inset:-40% -10% auto auto;width:900px;height:900px;background:radial-gradient(closest-side,rgba(0,87,240,.28),transparent);pointer-events:none}
+.hero-in{position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:48px;padding-block:64px 72px}
+.hero-txt{flex:1 1 420px;min-width:0;display:flex;flex-direction:column;gap:22px}
+.pill{align-self:flex-start;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cyan);border:1px solid #0E3A4A;background:#071822;padding:6px 12px;border-radius:999px}
+.hero h1{font-weight:800;font-size:clamp(40px,6.2vw,72px);line-height:1.02;letter-spacing:-2px}
+.hero h1 em{font-style:italic;color:var(--cyan)}
+.hero-txt>p{font-size:20px;color:var(--fg-2);max-width:540px}
+.row{display:flex;flex-wrap:wrap;gap:12px}
+.ticks{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:15px;color:var(--fg-3)}
+.hero-art{flex:1 1 560px;min-width:0;position:relative;padding-bottom:28px}
 
-/* ---------- activación ---------- */
-#act{align-items:center;justify-content:center;padding:calc(var(--u)*2) calc(var(--u)*3) calc(var(--u)*6);overflow:auto}
-.actBox{width:min(100%,calc(var(--u)*92));display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*1.5);text-align:center}
-.actBox .logo{height:calc(var(--u)*6.5)}
-.actVer{color:var(--mut);font-size:calc(var(--u)*var(--ft)*1.1);margin-top:calc(var(--u)*-1)}
-.actEstado{display:inline-flex;align-items:center;gap:calc(var(--u)*1);padding:calc(var(--u)*.8) calc(var(--u)*2.2);
-  border-radius:99px;font-weight:700;font-size:calc(var(--u)*var(--ft)*1.6);letter-spacing:.04em;text-transform:uppercase;
-  background:color-mix(in srgb,var(--bad) 16%,transparent);color:#FF8A8A;border:1px solid color-mix(in srgb,var(--bad) 40%,transparent)}
-.actEstado.ok{background:color-mix(in srgb,var(--ok) 15%,transparent);color:#7DE8A4;border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
-.actEstado i{width:calc(var(--u)*1);height:calc(var(--u)*1);border-radius:50%;background:currentColor}
-.actTit{font-size:calc(var(--u)*var(--ft)*2.6);font-weight:800}
-.actMsg{color:var(--mut);font-size:calc(var(--u)*var(--ft)*1.5);max-width:calc(var(--u)*70);line-height:1.45}
-.planes{display:flex;gap:calc(var(--u)*2.4);margin-top:calc(var(--u)*.6)}
-.plan{width:calc(var(--u)*20);padding:calc(var(--u)*1.5);border-radius:calc(var(--u)*1.8);background:var(--card);border:1px solid var(--line);position:relative}
-.plan.dest{border:1px solid transparent;background:linear-gradient(var(--card),var(--card)) padding-box,var(--grad) border-box}
-.plan .pre{font-size:calc(var(--u)*var(--ft)*3.4);font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-.plan .dur{font-size:calc(var(--u)*var(--ft)*1.7);color:var(--mut);margin-top:calc(var(--u)*.3)}
-.plan .tag{position:absolute;top:calc(var(--u)*-1.1);left:50%;transform:translateX(-50%);background:var(--grad);color:#fff;
-  font-size:calc(var(--u)*var(--ft)*1.1);font-weight:700;padding:calc(var(--u)*.3) calc(var(--u)*1.2);border-radius:99px;white-space:nowrap}
-.codigo{display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*.6);padding:calc(var(--u)*1.1) calc(var(--u)*4);
-  border-radius:calc(var(--u)*1.6);background:var(--bg2);border:1px dashed color-mix(in srgb,var(--c1) 45%,transparent)}
-.codigo small{color:var(--mut);font-size:calc(var(--u)*var(--ft)*1.3);text-transform:uppercase;letter-spacing:.12em}
-.codigo b{font-size:calc(var(--u)*var(--ft)*3.2);letter-spacing:.08em;font-family:Consolas,"Roboto Mono",monospace}
-.botones{display:flex;gap:calc(var(--u)*1.6);flex-wrap:wrap;justify-content:center}
-.btn{display:inline-flex;align-items:center;gap:calc(var(--u)*1);padding:calc(var(--u)*1.2) calc(var(--u)*2.6);border-radius:calc(var(--u)*1.2);
-  background:var(--card2);border:1px solid var(--line);font-size:calc(var(--u)*var(--ft)*1.6);font-weight:600}
-.btn svg{width:calc(var(--u)*2);height:calc(var(--u)*2)}
-.btn.pri{background:var(--grad);border-color:transparent;color:#fff}
-.pie{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-between;gap:calc(var(--u)*2);
-  padding:calc(var(--u)*1.4) calc(var(--u)*3);color:var(--mut);font-size:calc(var(--u)*var(--ft)*1.2);border-top:1px solid var(--line);background:color-mix(in srgb,var(--bg) 85%,transparent)}
-.pie b{color:var(--txt);font-weight:600}
+/* maqueta de la app (portátil + móvil) */
+.laptop{width:80%;max-width:100%}
+.screen{aspect-ratio:16/10;max-width:100%;border:9px solid #10151F;border-radius:14px 14px 4px 4px;background:#060A12;box-shadow:0 30px 90px rgba(0,87,240,.3);overflow:hidden;container-type:inline-size}
+.base{height:14px;margin:0 -6%;background:linear-gradient(#2a3242,#141a25);border-radius:0 0 14px 14px}
+.app{height:100%;padding:4.5cqi 5cqi;display:flex;flex-direction:column;gap:3cqi;background:radial-gradient(120% 80% at 20% 0%,#0b1a33,#05070C 60%)}
+.app-top{display:flex;align-items:center;justify-content:space-between;gap:2cqi}
+.app-top img{height:7cqi;width:auto}
+.app-top small{font-size:1.6cqi;color:var(--fg-3);margin-left:1cqi;align-self:flex-end}
+.status{font-size:1.8cqi;font-weight:700;color:#7FE3A6;background:#0C2A1C;border-radius:99px;padding:.8cqi 1.8cqi;white-space:nowrap}
+.status::before{content:"● ";color:var(--green)}
+.lista{font-size:1.9cqi;color:var(--fg-3)}.lista b{color:var(--white)}
+.tiles{flex:1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2.2cqi}
+.tile{border-radius:2cqi;padding:2.2cqi;display:flex;flex-direction:column;justify-content:flex-end;gap:.4cqi;position:relative;overflow:hidden;background:#111827;border:1px solid #1c2638}
+.tile svg{position:absolute;top:22%;left:50%;width:34%;transform:translateX(-50%);opacity:.9}
+.tile b{font-family:var(--f-display);color:var(--white);font-size:2.6cqi;line-height:1.1}
+.tile span{font-size:1.5cqi;color:var(--fg-2)}
+.t1{background:linear-gradient(160deg,#0e4f7a,#0a1f3f);box-shadow:0 0 0 .5cqi var(--cyan),0 0 4cqi rgba(0,216,246,.45)}
+.t2{background:linear-gradient(160deg,#3a2a12,#141016)}
+.t3{background:linear-gradient(160deg,#4a0f1c,#140a12)}
+.t4{background:linear-gradient(160deg,#21234f,#0d0f22)}
+.btns{display:flex;gap:1.4cqi;overflow:hidden}
+.btns span{flex:none;font-size:1.6cqi;color:var(--fg);background:#101827;border:1px solid #1c2638;border-radius:1.2cqi;padding:1.1cqi 1.8cqi;white-space:nowrap}
+.phone{position:absolute;right:0;bottom:0;width:25%;aspect-ratio:9/19;max-width:100%;border:7px solid #10151F;border-radius:26px;background:#060A12;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6);container-type:inline-size}
+.phone .app{padding:9cqi 7cqi;gap:5cqi}
+.phone .app-top img{height:15cqi}
+.phone .status{font-size:4.2cqi;padding:1.5cqi 3.5cqi;align-self:flex-start}
+.phone .tiles{grid-template-columns:1fr 1fr;gap:4cqi}
+.phone .tile{border-radius:4cqi;padding:4cqi}
+.phone .tile b{font-size:5.6cqi}.phone .tile span{font-size:3.4cqi}
+.phone .code{font-size:3.6cqi;color:var(--fg-3);text-align:center}.phone .code b{color:var(--white)}
+@media (max-width:520px){.laptop{width:100%}.phone{width:32%;right:-2%}}
 
-/* ---------- portada ---------- */
-#home{padding:calc(var(--u)*3) calc(var(--u)*4) calc(var(--u)*7)}
-.top{display:flex;align-items:center;justify-content:space-between;gap:calc(var(--u)*2)}
-.marca{display:flex;align-items:flex-end;gap:calc(var(--u)*1.2)}
-.marca img{height:calc(var(--u)*6.5)}
-.marca span{color:var(--mut);font-size:calc(var(--u)*var(--ft)*1.2);padding-bottom:calc(var(--u)*.4)}
-.estado{display:flex;flex-direction:column;align-items:flex-end;gap:calc(var(--u)*.6)}
-.pastilla{white-space:nowrap;display:inline-flex;align-items:center;gap:calc(var(--u)*.8);padding:calc(var(--u)*.6) calc(var(--u)*1.6);border-radius:99px;
-  font-size:calc(var(--u)*var(--ft)*1.35);font-weight:700;background:color-mix(in srgb,var(--ok) 16%,transparent);color:#7DE8A4}
-.pastilla.prueba{background:color-mix(in srgb,var(--warn) 16%,transparent);color:#FFC766}
-.pastilla i{width:calc(var(--u)*.8);height:calc(var(--u)*.8);border-radius:50%;background:currentColor}
-.reloj{font-size:calc(var(--u)*var(--ft)*2.6);font-weight:300;letter-spacing:.02em}
-.listaAct{margin:calc(var(--u)*3) 0 calc(var(--u)*2.2);display:flex;align-items:center;gap:calc(var(--u)*1.2);color:var(--mut);font-size:calc(var(--u)*var(--ft)*1.5)}
-.listaAct b{color:var(--txt)}
-.tiles{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:calc(var(--u)*2.2);min-height:0;max-height:calc(var(--u)*34)}
-.tile{position:relative;border-radius:calc(var(--u)*2);background:var(--card);border:1px solid var(--line);overflow:hidden;
-  display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;padding:calc(var(--u)*2.4);text-align:left}
-.tile::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 100% 0,color-mix(in srgb,var(--c1) 22%,transparent),transparent 60%);opacity:.6;transition:opacity .2s}
-.tile .ico{position:absolute;top:calc(var(--u)*2.4);left:calc(var(--u)*2.4);width:calc(var(--u)*7);height:calc(var(--u)*7);border-radius:calc(var(--u)*1.8);
-  background:var(--grad);display:grid;place-items:center;box-shadow:0 calc(var(--u)*1) calc(var(--u)*3) color-mix(in srgb,var(--c2) 45%,transparent)}
-.tile .ico svg{width:55%;height:55%;color:#fff}
-.tile b{position:relative;font-size:calc(var(--u)*min(var(--ft),1.1)*2.5);font-weight:800}
-.tile small{position:relative;color:var(--mut);font-size:calc(var(--u)*var(--ft)*1.3);margin-top:calc(var(--u)*.4)}
-.tile.f:focus-visible,.tile.kf{border-color:transparent;background:linear-gradient(var(--card2),var(--card2)) padding-box,var(--grad) border-box}
-.tile.f:focus-visible::before,.tile.kf::before{opacity:1}
-.tile.vacia{opacity:.42;filter:grayscale(.85)}
-.tile.vacia.kf,.tile.vacia:focus-visible{opacity:.7}
-/* botones de la portada: una sola fila; si no caben, se deslizan con las flechas ‹ › (solo salen cuando hay más botones hacia ese lado) */
-.carril{position:relative;margin-top:calc(var(--u)*2.6)}
-.homeBtns{display:flex;gap:calc(var(--u)*1);flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scroll-behavior:smooth;scrollbar-width:none;padding:calc(var(--u)*.6) calc(var(--u)*.4)}
-.homeBtns::-webkit-scrollbar{display:none}
-.homeBtns .btn{padding:calc(var(--u)*1) calc(var(--u)*1.5);gap:calc(var(--u)*.8);flex:none;white-space:nowrap}
-.nLis{margin-left:calc(var(--u)*-.45);opacity:.85}.nLis:empty{display:none}
-.flecha{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:calc(var(--u)*4.4);height:calc(var(--u)*4.4);border-radius:50%;border:0;
-  background:var(--grad);color:#fff;font-size:calc(var(--u)*3.2);font-weight:800;line-height:1;display:grid;place-items:center;padding-bottom:calc(var(--u)*.4);
-  box-shadow:0 0 calc(var(--u)*1.6) color-mix(in srgb,var(--c1) 55%,transparent),0 0 0 calc(var(--u)*.5) var(--bg)}
-.flecha[hidden]{display:none}
-.flecha.izq{left:calc(var(--u)*-1)}.flecha.der{right:calc(var(--u)*-1)}
+/* FRANJA DISPOSITIVOS */
+.devs{background:var(--bg-2);border-bottom:1px solid var(--line)}
+.devs-in{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:12px 34px;padding-block:22px;font-weight:700;font-size:15px;color:var(--fg)}
+.devs-in>span:first-child{color:var(--fg-3)}
+.soon{font-weight:500;color:var(--fg-3);font-size:13px}
 
-/* ---------- elegir lista ---------- */
-#listas{align-items:center;justify-content:center;gap:calc(var(--u)*4);padding:calc(var(--u)*3)}
-#listas h2{font-size:calc(var(--u)*var(--ft)*3);font-weight:800}
-.circulos{display:flex;gap:calc(var(--u)*3.4);flex-wrap:wrap;justify-content:center}
-.circ{display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*1.4);width:calc(var(--u)*17)}
-.circ .bola{width:calc(var(--u)*15);height:calc(var(--u)*15);border-radius:50%;display:grid;place-items:center;
-  font-size:calc(var(--u)*var(--ft)*5);font-weight:800;background:var(--card);border:calc(var(--u)*.35) solid var(--line);transition:.15s}
-.circ.sel .bola{border-color:var(--c1)}
-.circ span{font-size:calc(var(--u)*var(--ft)*1.6);font-weight:600;text-align:center}
-.circ small{color:var(--mut);font-size:calc(var(--u)*var(--ft)*1.2);margin-top:calc(var(--u)*-1)}
-.circ.f:focus-visible,.circ.kf{transform:none;box-shadow:none}
-.circ.f:focus-visible .bola,.circ.kf .bola{background:var(--grad);border-color:transparent;transform:scale(1.08);box-shadow:0 0 calc(var(--u)*4) color-mix(in srgb,var(--c1) 50%,transparent)}
+/* FUNCIONES */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:18px}
+.feat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:10px}
+.feat p{color:#9AA7BB}
+.formats{display:flex;flex-wrap:wrap;gap:28px 48px;padding:26px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,#081120,#05070C)}
+.formats>div{display:flex;flex-direction:column;gap:12px;min-width:0}
+.formats .eyebrow{color:var(--fg-3)}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{border:1px solid #1E5A86;color:var(--cyan-2);background:#071526;border-radius:10px;padding:9px 14px;font-weight:700;font-size:15px}
+.note{display:flex;align-items:center;gap:12px;padding:16px 20px;border-radius:14px;background:#1a1405;border:1px solid #4a3a10;color:#F3E2B0;font-size:16px}
+.note b{color:var(--gold)}
 
-/* ---------- ventanas ---------- */
-.velo{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:50;backdrop-filter:blur(6px)}
-.velo.on{display:flex}
-.ven{width:min(92vw,calc(var(--u)*62));background:var(--bg2);border:1px solid var(--line);border-radius:calc(var(--u)*2);padding:calc(var(--u)*3);
-  display:flex;flex-direction:column;gap:calc(var(--u)*1.6)}
-.ven h3{font-size:calc(var(--u)*var(--ft)*2.3)}
-.fila{display:flex;justify-content:space-between;gap:calc(var(--u)*2);padding:calc(var(--u)*1) 0;border-bottom:1px solid var(--line);font-size:calc(var(--u)*var(--ft)*1.55)}
-.fila span{color:var(--mut)}
-.opc{display:flex;align-items:center;justify-content:space-between;padding:calc(var(--u)*1.3) calc(var(--u)*1.8);border-radius:calc(var(--u)*1.2);
-  background:var(--card);border:1px solid var(--line);font-size:calc(var(--u)*var(--ft)*1.7);text-align:left;width:100%}
-.opc.sel::after{content:"✓";color:var(--c1);font-weight:800}
-.ven .botones{justify-content:flex-end;margin-top:calc(var(--u)*.6)}
-#aviso{position:fixed;left:50%;bottom:calc(var(--u)*9);transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;
-  background:var(--card2);border:1px solid var(--line);padding:calc(var(--u)*1.2) calc(var(--u)*2.4);border-radius:99px;font-size:calc(var(--u)*var(--ft)*1.5);transition:.25s;z-index:60}
-#aviso.on{opacity:1;transform:translateX(-50%)}
+/* PRECIOS */
+.plans{width:100%;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;align-items:stretch}
+.plan{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:30px;display:flex;flex-direction:column;gap:16px;position:relative}
+.plan .price{display:flex;align-items:baseline;gap:8px}
+.plan .price b{font-family:var(--f-display);font-weight:800;font-size:52px;color:var(--white);line-height:1}
+.plan .price span,.plan .sub{color:#9AA7BB}
+.plan ul{margin:0;padding:0 0 0 20px;color:var(--fg-2);display:flex;flex-direction:column;gap:6px;flex:1}
+.plan.top{background:var(--card-2);border:2px solid var(--cyan)}
+.plan.top .sub{color:var(--cyan-2)}
+.plan .badge{position:absolute;top:-14px;left:30px;background:var(--cyan);color:var(--ink);font-weight:800;font-size:13px;padding:5px 12px;border-radius:999px}
+.plan.gift{background:linear-gradient(160deg,#1b1606,#0B111C 60%);border-color:#4a3a10}
+.plan.gift .price b{color:var(--gold)}
+.center{text-align:center;color:var(--fg-3);font-size:14px}
 
-/* ---------- móvil en vertical ---------- */
-@media (orientation:portrait){
-  :root{--u:min(1.9vw,1.2vh)}
-  .tiles{grid-template-columns:repeat(2,1fr);max-height:none}
-  .planes{flex-direction:column}
-  .plan{width:calc(var(--u)*36)}
-  #home{overflow-x:hidden;overflow-y:auto}
-  #home .top{flex-wrap:wrap;row-gap:calc(var(--u)*1.2)}
-  #home .estado{flex-direction:row-reverse;align-items:center;justify-content:space-between;width:100%;gap:calc(var(--u)*1)}
-  #home .reloj{font-size:calc(var(--u)*var(--ft)*2.2)}
-  #home .pastilla{white-space:normal;max-width:100%}
-  .pie{flex-direction:column;align-items:center;text-align:center;gap:calc(var(--u)*.4)}
-}
+/* ACTIVAR */
+.act{display:flex;flex-wrap:wrap;gap:36px;align-items:stretch;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:clamp(24px,4vw,48px)}
+.act-txt{flex:1 1 360px;min-width:0;display:flex;flex-direction:column;gap:16px}
+.act-txt ol{margin:0;padding-left:22px;color:var(--fg-2);display:flex;flex-direction:column;gap:8px}
+.act-txt ol b{color:var(--white)}
+form.act-form{flex:1 1 380px;min-width:0;display:flex;flex-direction:column;gap:16px;background:var(--bg);border:1px solid var(--line-2);border-radius:18px;padding:24px}
+label{font-weight:700;font-size:15px;display:flex;flex-direction:column;gap:8px}
+input[type=text]{font:inherit;font-family:var(--f-display);font-weight:700;letter-spacing:2px;font-size:20px;text-transform:uppercase;color:var(--white);background:#0B111C;border:1px solid var(--line-2);border-radius:12px;padding:14px 16px;width:100%}
+input[type=text]:focus{border-color:var(--cyan);outline:none}
+.hint{font-weight:400;color:var(--fg-3);font-size:14px}
+.err{color:#FF8A8A;font-size:14px;font-weight:500}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+legend{font-weight:700;font-size:15px;margin-bottom:8px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.opt{position:relative}
+.opt input{position:absolute;opacity:0;inset:0}
+.opt span{display:flex;flex-direction:column;gap:2px;border:1px solid var(--line-2);border-radius:12px;padding:12px 14px;cursor:pointer;font-weight:500;color:var(--fg-2);font-size:14px;height:100%}
+.opt span b{font-family:var(--f-display);color:var(--white);font-size:17px}
+.opt input:checked+span{border-color:var(--cyan);background:#071a2a;box-shadow:0 0 0 1px var(--cyan)}
+.opt input:focus-visible+span{outline:3px solid var(--cyan);outline-offset:2px}
+
+/* DESCARGAR */
+.dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+.dlc{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:12px}
+.dlc .ic{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;background:#0E1A2C}
+.dlc p{color:#9AA7BB;flex:1}
+.dlc small{color:var(--fg-3);font-size:13px}
+.dl-code{font-family:var(--f-display);font-weight:800;font-size:clamp(28px,2.6vw,36px);letter-spacing:3px;overflow-wrap:anywhere;color:var(--cyan);line-height:1}
+.tag{align-self:flex-start;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:99px;background:#0C2A1C;color:#7FE3A6}
+.tag.test{background:#2a2108;color:var(--gold)}
+
+/* INSTALAR + AVISOS */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;counter-reset:s}
+.step{display:flex;gap:16px;align-items:flex-start}
+.step .n{flex:none;width:46px;height:46px;border-radius:12px;background:var(--grad);display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:20px;color:var(--white)}
+.step>div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.step p{color:#9AA7BB}
+.step p b{color:var(--fg)}
+.warns{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px}
+@media (max-width:420px){.warns{grid-template-columns:1fr}}
+.warn{border-radius:20px;padding:26px;display:flex;flex-direction:column;gap:18px;border:1px solid #12305A;background:linear-gradient(180deg,#0A1830,#070B13)}
+.warn.pp{border-color:#3a2a6a;background:linear-gradient(180deg,#160f33,#070B13)}
+.warn .imgs{display:flex;gap:14px;flex-wrap:wrap}
+.warn .imgs img{flex:1 1 140px;min-width:0;max-width:220px;height:auto;border-radius:14px;border:1px solid rgba(255,255,255,.08)}
+.warn p{color:var(--fg-2)}
+.fix{display:flex;flex-direction:column;gap:6px;padding:16px 18px;border-radius:14px;background:rgba(61,220,132,.08);border:1px solid rgba(61,220,132,.3)}
+.fix b.lbl{color:var(--green);font-family:var(--f-display)}
+.fix p{color:var(--fg)}
+.fix em{font-style:normal;color:var(--gold);font-weight:700}
+
+/* VOLUNTARIOS */
+.vol{display:flex;flex-wrap:wrap;gap:36px;align-items:center;border-radius:24px;padding:clamp(24px,4vw,52px);background:radial-gradient(120% 120% at 100% 0%,#1d2f12 0%,#0A1830 45%,#070B13 100%);border:1px solid #1f3d3a}
+.vol-txt{flex:1 1 420px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.vol-txt p{color:var(--fg-2);font-size:18px}
+.vol-txt .eyebrow{color:var(--green)}
+.vol-box{flex:0 1 320px;min-width:0;display:flex;flex-direction:column;gap:14px;align-items:stretch;text-align:center}
+.lic{border:2px solid var(--gold);border-radius:18px;padding:20px;background:#120f05}
+.lic b{display:block;font-family:var(--f-display);font-weight:800;font-size:40px;color:var(--gold);line-height:1.05}
+.lic span{color:#F3E2B0;font-size:15px}
+
+/* FAQ */
+.faq{max-width:860px}
+.faq details{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 22px}
+.faq summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:16px;font-weight:700;color:var(--white)}
+.faq summary::-webkit-details-marker{display:none}
+.faq .mas{color:var(--cyan);font-size:24px;transition:transform .2s;flex:none}
+.faq details[open] .mas{transform:rotate(45deg)}
+.faq details p{margin-top:12px;color:var(--fg-2)}
+.faq-list{display:flex;flex-direction:column;gap:10px}
+
+/* CONTACTO */
+.cta{border-radius:24px;padding:clamp(28px,5vw,60px);background:linear-gradient(135deg,#00B4D8,#0047C8);display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between}
+.cta>div{flex:1 1 380px;min-width:0;display:flex;flex-direction:column;gap:10px}
+.cta p{color:#EAF6FF;font-size:18px}
+.cta .num{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.cta .btn-white{background:var(--white);color:var(--bg);font-size:18px;padding:17px 26px}
+.cta .btn-white:hover{color:var(--bg)}
+.copy{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);color:var(--white);font:inherit;font-weight:700;padding:15px 18px;border-radius:12px;cursor:pointer}
+.copy:hover{background:rgba(255,255,255,.22)}
+
+footer{border-top:1px solid var(--line);background:var(--bg-2);margin-top:88px}
+.foot{padding-block:36px;display:flex;flex-direction:column;gap:18px}
+.foot-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;align-items:center}
+.foot-top img{height:34px;width:auto}
+.foot nav{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:15px}
+.foot nav a{color:var(--fg-2)}
+.foot p{color:var(--fg-3);font-size:14px;max-width:860px}
+.foot .small{color:#6F7C92;font-size:13px}
 </style>
 </head>
 <body>
 
-<!-- ============ ARRANQUE ============ -->
-<section class="scr on" id="splash">
-  <img data-icon alt="">
-  <div class="barra"><i></i></div>
-  <div id="splashTxt" data-t="comprobando">Comprobando licencia…</div>
-</section>
+<header>
+  <div class="wrap bar">
+    <a class="logo" href="#inicio" aria-label="PepeTV, inicio"><img src="img/logo.webp" alt="PepeTV" width="783" height="172"></a>
+    <nav aria-label="Principal">
+      <a href="#funciones">Funciones</a>
+      <a href="#precios">Precios</a>
+      <a href="#activar">Activar</a>
+      <a href="#descargar">Descargar</a>
+      <a href="#instalar">Cómo instalar</a>
+      <a href="#smart-tv">Smart TV</a>
+      <a href="#faq">Preguntas</a>
+    </nav>
+    <a class="btn btn-main" href="#descargar">Prueba gratis 7 días</a>
+  </div>
+</header>
 
-<!-- ============ ACTIVACIÓN ============ -->
-<section class="scr" id="act">
-  <div class="actBox">
-    <img class="logo" data-logo alt="">
-    <span class="actVer" data-version></span>
-    <div class="actEstado" id="actEstado"><i></i><span></span></div>
-    <div class="actTit" id="actTit"></div>
-    <div class="actMsg" id="actMsg"></div>
-    <div class="planes" id="planes"></div>
-    <div class="codigo"><small data-t="codigoAparato">Código del aparato</small><b data-code></b></div>
-    <div class="actMsg" id="actContacto"></div>
-    <div class="botones">
-      <button class="btn pri f" data-go="soporte" id="actSop" hidden><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.4 1.8 2.2 1.2 1.1 2.2 1.4 2.5 1.6.3.1.5.1.7-.1l.9-1.1c.2-.3.4-.2.7-.1l1.9.9c.3.1.5.2.5.4.1.1.1.7-.1 1.3z"/></svg><span data-t="soporte">Contactar con soporte</span></button>
-      <button class="btn f" data-go="refrescar" id="actAct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg><span data-t="actualizar">Actualizar</span></button>
-      <button class="btn f" data-go="idioma"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg><span data-t="idioma">Idioma</span></button>
-      <button class="btn f" data-go="salir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></svg><span data-t="salir">Salir</span></button>
+<main>
+<!-- PORTADA -->
+<section id="inicio" class="hero">
+  <div class="wrap hero-in">
+    <div class="hero-txt">
+      <span class="pill">¡Ya disponible! · Versión 2.8</span>
+      <h1>Tu TV en<br><em>un solo lugar.</em></h1>
+      <p>Carga tu lista y ten la tele en directo, películas, series y radios del mundo en una sola app. Para el móvil, el ordenador y la tele, y fácil de manejar con el mando.</p>
+      <div class="row">
+        <a class="btn btn-main" href="#descargar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Descargar gratis</a>
+        <a class="btn btn-ghost" href="#precios">Ver precios</a>
+      </div>
+      <div class="ticks">
+        <span class="tick"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00D8F6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>7 días gratis, sin tarjeta</span>
+        <span class="tick"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00D8F6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Sin cuotas mensuales</span>
+        <span class="tick"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00D8F6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Ayuda por WhatsApp</span>
+      </div>
+    </div>
+
+    <div class="hero-art" aria-label="Pantalla de inicio de PepeTV en el ordenador y en el móvil" role="img">
+      <div class="laptop">
+        <div class="screen">
+          <div class="app">
+            <div class="app-top">
+              <div style="display:flex;align-items:center"><img src="img/logo.webp" alt=""><small>v2.8</small></div>
+              <span class="status">Activo · expira el 28/10/2036</span>
+            </div>
+            <div class="lista">Lista actual: <b>Mi lista</b></div>
+            <div class="tiles">
+              <div class="tile t1"><svg viewBox="0 0 24 24" fill="none" stroke="#7FEBFA" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M10 9l4 2-4 2z"/></svg><b>TV en vivo</b><span>Tus canales</span></div>
+              <div class="tile t2"><svg viewBox="0 0 24 24" fill="none" stroke="#FFC83D" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></svg><b>Radios</b><span>Emisoras de todo el mundo</span></div>
+              <div class="tile t3"><svg viewBox="0 0 24 24" fill="none" stroke="#FF8FA3" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M17 9h4M3 15h4M17 15h4"/></svg><b>Películas</b><span>Con carátulas</span></div>
+              <div class="tile t4"><svg viewBox="0 0 24 24" fill="none" stroke="#A9B4FF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 3l4 4 4-4"/></svg><b>Series</b><span>Por temporadas</span></div>
+            </div>
+            <div class="btns"><span>Buscar</span><span>Actualizar</span><span>Cambiar lista (2)</span><span>Enviar mi lista</span><span>Ajustes</span><span>Enlaces</span></div>
+          </div>
+        </div>
+        <div class="base"></div>
+      </div>
+      <div class="phone">
+        <div class="app">
+          <div class="app-top"><img src="img/logo.webp" alt=""></div>
+          <span class="status">Activo</span>
+          <div class="tiles">
+            <div class="tile t1"><svg viewBox="0 0 24 24" fill="none" stroke="#7FEBFA" stroke-width="1.6"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8"/></svg><b>TV en vivo</b></div>
+            <div class="tile t2"><svg viewBox="0 0 24 24" fill="none" stroke="#FFC83D" stroke-width="1.6"><circle cx="12" cy="12" r="2"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7"/></svg><b>Radios</b></div>
+            <div class="tile t3"><svg viewBox="0 0 24 24" fill="none" stroke="#FF8FA3" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16"/></svg><b>Películas</b></div>
+            <div class="tile t4"><svg viewBox="0 0 24 24" fill="none" stroke="#A9B4FF" stroke-width="1.6"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 3l4 4 4-4"/></svg><b>Series</b></div>
+          </div>
+          <div class="code">Código: <b>PEPE-XXXX-XXXX</b></div>
+        </div>
+      </div>
     </div>
   </div>
-  <div class="pie"><div><span data-t="codigo">Código</span>: <b data-code></b> · <span id="actFecha"></span></div><div data-legal></div></div>
 </section>
 
-<!-- ============ PORTADA ============ -->
-<section class="scr" id="home">
-  <div class="top">
-    <div class="marca"><img data-logo alt=""><span data-version></span></div>
-    <div class="estado"><div class="reloj" data-clock></div><div class="pastilla" id="pastilla"><i></i><span></span></div></div>
+<!-- DISPOSITIVOS -->
+<section class="devs" aria-label="Dispositivos compatibles">
+  <div class="wrap devs-in">
+    <span>Funciona en:</span>
+    <span>Móviles Android</span>
+    <span>Ordenadores Windows</span>
+    <span>TV Box</span>
+    <span>Fire TV Stick</span>
+    <span>Smart TV Android TV / Google TV <span class="soon">(en pruebas)</span></span>
+    <span>iPhone y iPad <span class="soon">(app web)</span></span>
   </div>
-  <div class="listaAct" id="listaAct"></div>
-  <div class="tiles">
-    <button class="tile f" data-go="sec:live"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="13" rx="2.5"/><path d="M8 2.5l4 3.5 4-3.5"/></svg></div><b data-t="tv">TV en vivo</b><small id="nLive"></small></button>
-    <button class="tile f" data-go="sec:movie"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><path d="M7 3v18M17 3v18M3 8h4M3 16h4M17 8h4M17 16h4"/></svg></div><b data-t="peliculas">Películas</b><small id="nMovie"></small></button>
-    <button class="tile f" data-go="sec:series"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="19" height="13" rx="2.5"/><path d="M6 3.5h12M10 11v5l4-2.5z"/></svg></div><b data-t="series">Series</b><small id="nSeries"></small></button>
-    <button class="tile f" data-go="sec:radio"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8" width="19" height="13" rx="2.5"/><path d="M7 8l10-5"/><circle cx="15.5" cy="14.5" r="2.5"/><path d="M6 13h4M6 16.5h4"/></svg></div><b data-t="radios">Radios</b><small data-t="radiosSub">Emisoras de todo el mundo</small></button>
+</section>
+
+<!-- FUNCIONES -->
+<section id="funciones" class="wrap sec">
+  <div class="head">
+    <span class="eyebrow">Qué hace PepeTV</span>
+    <h2>Todo tu entretenimiento, ordenado y a mano</h2>
+    <p>Abres la app y tienes cuatro puertas: TV en vivo, Radios, Películas y Series. Pensada para el mando de la tele, sin menús raros.</p>
   </div>
-  <div class="carril"><button class="flecha izq" type="button" aria-label="Anterior" hidden>‹</button><div class="homeBtns">
-    <button class="btn f" data-go="refrescar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg><span data-t="actualizar">Actualizar</span></button>
-    <button class="btn f" data-go="listas" id="btnListas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span data-t="cambiarLista">Cambiar lista</span><span class="nLis" id="nLis"></span></button>
-    <button class="btn f" data-go="envio" id="btnEnvio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg><span>Enviar mi lista</span></button>
-    <button class="btn f" data-go="ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 15H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 9 4.6V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span data-t="ajustes">Ajustes</span></button>
-    <button class="btn f" data-go="enlaces" id="btnEnlaces"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg><span data-t="enlaces">Enlaces</span></button>
-    <button class="btn f" data-go="soporte" id="btnSoporte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="13" width="4" height="6" rx="1.5"/><rect x="17" y="13" width="4" height="6" rx="1.5"/><path d="M19 19c0 1.5-2 2.5-5 2.5"/></svg><span data-t="soporteCorto">Soporte</span></button>
-    <button class="btn f" data-go="salir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></svg><span data-t="salir">Salir</span></button>
-  </div><button class="flecha der" type="button" aria-label="Siguiente" hidden>›</button></div>
-  <div class="pie"><div><span data-t="codigo">Código</span>: <b data-code></b></div><div data-legal></div></div>
+  <div class="grid">
+    <div class="feat">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#00D8F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8"/></svg>
+      <h3>TV en vivo por categorías</h3>
+      <p>Los canales de tu lista agrupados por carpetas, para pasar de uno a otro con las flechas del mando.</p>
+    </div>
+    <div class="feat">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#00D8F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M17 9h4M3 15h4M17 15h4"/></svg>
+      <h3>Películas y series con carátula</h3>
+      <p>Las series ordenadas por temporadas y capítulos. Ves de un vistazo lo que hay en tu lista.</p>
+    </div>
+    <div class="feat">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#00D8F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></svg>
+      <h3>Radios de todo el mundo</h3>
+      <p>Emisoras de radio incluidas en la app, para escucharlas con la tele, el móvil o el ordenador.</p>
+    </div>
+    <div class="feat">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#00D8F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+      <h3>Busca escribiendo o por voz</h3>
+      <p>Escribe o di el nombre de un canal, una película o una serie y lo encuentras en una sola búsqueda.</p>
+    </div>
+    <div class="feat">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#00D8F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+      <h3>Varias listas, un toque</h3>
+      <p>Guarda más de una lista y cambia entre ellas con «Cambiar lista». Con «Actualizar» la recargas al momento.</p>
+    </div>
+    <div class="feat">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#00D8F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M5 21h14"/></svg>
+      <h3>Envíanos tu lista</h3>
+      <p>¿No sabes cargarla? Pulsa «Enviar mi lista» y te la dejamos puesta nosotros. Tú no tocas nada.</p>
+    </div>
+    <div class="feat">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#00D8F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+      <h3>Control parental</h3>
+      <p>Bloquea u oculta carpetas con un PIN. Los peques solo ven lo que tú decides.</p>
+    </div>
+    <div class="feat">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#00D8F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/><path d="M17 15l3 3-3 3"/></svg>
+      <h3>Ordénalo a tu gusto</h3>
+      <p>Cambia el orden de las carpetas, oculta lo que no uses y elige tema claro u oscuro, en lista o en cuadrícula.</p>
+    </div>
+    <div class="feat">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#00D8F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+      <h3>Ayuda a distancia</h3>
+      <p>Si te lías, das permiso desde la app y te lo dejamos configurado sin movernos de casa. Solo durante una hora.</p>
+    </div>
+  </div>
+
+  <div class="formats">
+    <div>
+      <span class="eyebrow">Admite listas</span>
+      <div class="chips"><span class="chip">M3U / M3U8 (enlace)</span><span class="chip">Xtream Codes</span><span class="chip">Archivo M3U</span></div>
+    </div>
+    <div>
+      <span class="eyebrow">Reproduce</span>
+      <div class="chips"><span class="chip">HLS (.m3u8)</span><span class="chip">MPEG-TS (.ts)</span><span class="chip">MP4</span></div>
+    </div>
+  </div>
+
+  <p class="note"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFC83D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span><b>PepeTV es un reproductor y no incluye canales.</b> Tú pones la lista que te dé tu proveedor.</span></p>
 </section>
 
-<!-- ============ ELEGIR LISTA ============ -->
-<section class="scr" id="listas">
-  <h2 data-t="eligeLista">Elija su lista de reproducción</h2>
-  <div class="circulos" id="circulos"></div>
+<!-- PRECIOS -->
+<section id="precios" class="wrap sec" style="align-items:center">
+  <div class="head" style="text-align:center;align-items:center">
+    <span class="eyebrow">Precios</span>
+    <h2>Un precio claro. Sin cuotas mensuales.</h2>
+    <p>Pruébala gratis. Si te gusta, la activas con el código de tu aparato.</p>
+  </div>
+  <div class="plans">
+    <div class="plan gift">
+      <h3>Prueba</h3>
+      <div class="price"><b>7 días</b></div>
+      <span class="sub">Gratis, con todas las funciones</span>
+      <ul><li>Sin tarjeta ni registro</li><li>Empieza sola al instalar</li><li>Ayuda por WhatsApp</li></ul>
+      <a class="btn btn-ghost" href="#descargar">Descargar</a>
+    </div>
+    <div class="plan">
+      <h3>1 año</h3>
+      <div class="price"><b>10 €</b><span>/ aparato</span></div>
+      <span class="sub">Menos de 1 € al mes</span>
+      <ul><li>Todas las funciones</li><li>Actualizaciones incluidas</li><li>Ayuda por WhatsApp</li></ul>
+      <a class="btn btn-ghost" href="#activar" data-plan="1 año (10 €)">Activar 1 año</a>
+    </div>
+    <div class="plan top">
+      <span class="badge">La más elegida</span>
+      <h3>10 años</h3>
+      <div class="price"><b>25 €</b><span>/ aparato</span></div>
+      <span class="sub">Pagas una vez y te olvidas</span>
+      <ul><li>Todo lo del plan de 1 año</li><li>Ahorras 75 € frente a renovar cada año</li><li>2,50 € al año</li></ul>
+      <a class="btn btn-main" href="#activar" data-plan="10 años (25 €)">Activar 10 años</a>
+    </div>
+  </div>
+  <p class="center">Formas de pago: [por confirmar: Bizum, transferencia, PayPal…]</p>
 </section>
 
-<!-- ============ VENTANAS ============ -->
-<div class="velo" id="vInfo"><div class="ven">
-  <h3 data-t="info">Info</h3>
-  <div id="infoFilas"></div>
-  <div class="botones"><button class="btn pri f" data-go="cerrar" data-t="cerrar">Cerrar</button></div>
-</div></div>
-<div class="velo" id="vIdioma"><div class="ven">
-  <h3 data-t="idioma">Idioma</h3>
-  <div id="idiomas" style="display:flex;flex-direction:column;gap:calc(var(--u)*1)"></div>
-</div></div>
-<div class="velo" id="vSalir"><div class="ven">
-  <h3 data-t="salirPreg">¿Salir de la aplicación?</h3>
-  <div class="botones"><button class="btn f" data-go="cerrar" data-t="no">No</button><button class="btn pri f" data-go="salirYa" data-t="si">Sí, salir</button></div>
-</div></div>
-<div id="aviso"></div>
+<!-- ACTIVAR -->
+<section id="activar" class="wrap sec">
+  <div class="act">
+    <div class="act-txt">
+      <span class="eyebrow">Activar o renovar</span>
+      <h2>Activa tu aparato en un minuto</h2>
+      <ol>
+        <li>Abre PepeTV. Abajo verás tu código, por ejemplo <b>PEPE-PTRJ-3H8Z</b>.</li>
+        <li>Escríbelo aquí y elige el plan.</li>
+        <li>Se abre WhatsApp con el mensaje preparado. Lo envías, pagas y te lo activamos.</li>
+      </ol>
+      <p style="color:var(--fg-3);font-size:15px">Cada aparato tiene su propio código. Si tienes varios, haz una activación por cada uno.</p>
+    </div>
+    <form class="act-form" id="actForm" novalidate>
+      <label for="codigo">Código de tu aparato
+        <input type="text" id="codigo" name="codigo" placeholder="PEPE-XXXX-XXXX" autocomplete="off" spellcheck="false" maxlength="14" aria-describedby="codigoAyuda codigoErr">
+        <span class="hint" id="codigoAyuda">Lo tienes en la parte de abajo de la pantalla de inicio.</span>
+        <span class="err" id="codigoErr" hidden>El código tiene esta forma: PEPE-XXXX-XXXX. Revisa que esté completo.</span>
+      </label>
+      <fieldset>
+        <legend>Plan</legend>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="plan" id="plan1" value="1 año (10 €)"><span><b>1 año</b>10 €</span></label>
+          <label class="opt"><input type="radio" name="plan" id="plan10" value="10 años (25 €)" checked><span><b>10 años</b>25 €</span></label>
+        </div>
+      </fieldset>
+      <button class="btn btn-wa" type="submit">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 8 19.4z"/></svg>
+        Pedir activación por WhatsApp</button>
+      <span class="hint" id="actMsg" aria-live="polite">Si no se abre WhatsApp, escríbenos al <b style="color:var(--white)">+34 613 45 26 63</b> con tu código y el plan.</span>
+    </form>
+  </div>
+</section>
+
+<!-- DESCARGAR -->
+<section id="descargar" class="wrap sec">
+  <div class="head">
+    <span class="eyebrow">Descargar · versión 2.8</span>
+    <h2>Elige tu aparato</h2>
+    <p>Todas las versiones empiezan con 7 días gratis. También tienes la <a href="https://github.com/aplicacionesmovilesecija-eng/pepetv-descargas">página de descargas con instrucciones</a>.</p>
+  </div>
+  <div class="dl">
+    <div class="dlc">
+      <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="#3DDC84" aria-hidden="true"><path d="M6 9h12v8a1 1 0 0 1-1 1h-1v3h-2v-3h-4v3H8v-3H7a1 1 0 0 1-1-1zM4 9h1v6H4zM19 9h1v6h-1zM7.5 3.5l1.2 1.8A6 6 0 0 1 12 4.5a6 6 0 0 1 3.3.8l1.2-1.8.6.4-1.1 1.7A5.5 5.5 0 0 1 18 8H6a5.5 5.5 0 0 1 2-2.4L6.9 3.9zM9.5 6.5a.7.7 0 1 0 0 1.4.7.7 0 0 0 0-1.4zm5 0a.7.7 0 1 0 0 1.4.7.7 0 0 0 0-1.4z"/></svg></span>
+      <span class="tag">Disponible</span>
+      <h3>Móvil, tablet y TV Box Android</h3>
+      <p>Descarga el archivo APK y ábrelo. Si el móvil te avisa, mira <a href="#instalar">cómo instalar</a>.</p>
+      <a class="btn btn-main" id="lnkApk" href="#descargar">Descargar APK</a>
+      <small>Android 7 o superior</small>
+    </div>
+    <div class="dlc">
+      <span class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="#00A4EF" aria-hidden="true"><path d="M3 5.5l7.5-1v7H3zM11.5 4.3L21 3v8.5h-9.5zM3 12.5h7.5v7L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg></span>
+      <span class="tag">Disponible</span>
+      <h3>Ordenador Windows</h3>
+      <p>Descarga el instalador (.exe), ábrelo y sigue los pasos. Funciona con ratón y teclado.</p>
+      <a class="btn btn-main" id="lnkExe" href="#descargar">Descargar para Windows</a>
+      <small>Windows 10 y 11</small>
+    </div>
+    <div class="dlc">
+      <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FF9900" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="20" rx="3"/><circle cx="12" cy="7" r="1.6"/><path d="M12 12v.01M12 16v.01"/></svg></span>
+      <span class="tag">Disponible</span>
+      <h3>Fire TV Stick</h3>
+      <p>Instala la app <b style="color:var(--fg)">Downloader</b> desde la tienda del Fire TV, ábrela y escribe este código:</p>
+      <span class="dl-code" id="dlCode">[código]</span>
+      <small>También sirve en TV Box con Downloader.</small>
+    </div>
+    <div class="dlc">
+      <span class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8EEF7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg></span>
+      <span class="tag test">En pruebas</span>
+      <h3>iPhone y iPad</h3>
+      <p>Abre la app web en Safari y pulsa Compartir › «Añadir a pantalla de inicio». Queda como una app más.</p>
+      <a class="btn btn-ghost" id="lnkWeb" href="http://pepe-tv.com/app">Abrir pepe-tv.com/app</a>
+      <small>No hace falta App Store.</small>
+    </div>
+  </div>
+</section>
+
+<!-- CÓMO INSTALAR -->
+<section id="instalar" class="wrap sec">
+  <div class="head">
+    <span class="eyebrow">Cómo instalar</span>
+    <h2>Listo en 3 pasos</h2>
+  </div>
+  <div class="steps">
+    <div class="step"><span class="n">1</span><div><h3>Instala la app</h3><p>Con el botón de descarga o con el código en Downloader.</p></div></div>
+    <div class="step"><span class="n">2</span><div><h3>Apunta tu código</h3><p>Al abrirla verás abajo un código como <b>PEPE-PTRJ-3H8Z</b>. Es el DNI de tu aparato.</p></div></div>
+    <div class="step"><span class="n">3</span><div><h3>Mándanoslo</h3><p>Por WhatsApp, con tu lista. Te la cargamos y, si quieres seguir tras la prueba, te la activamos.</p></div></div>
+  </div>
+
+  <div class="head" style="margin-top:20px">
+    <h2 style="font-size:clamp(24px,3vw,32px)">¿Android te muestra un aviso al instalar? Es normal.</h2>
+    <p>La app no viene de la tienda de Google, así que el móvil avisa antes de instalarla. Así se pasa cada aviso.</p>
+  </div>
+  <div class="warns">
+    <article class="warn">
+      <h3>Aviso de «orígenes desconocidos»</h3>
+      <p>Al abrir el APK, el teléfono dice que por seguridad no permite instalar aplicaciones de origen desconocido.</p>
+      <div class="imgs">
+        <img src="img/aviso-origenes.webp" alt="Aviso de Android: tu teléfono no permite instalar aplicaciones de orígenes desconocidos, con el botón Configuración" width="305" height="345">
+        <img src="img/permitir-fuente.webp" alt="Pantalla Instalar aplicaciones desconocidas con el interruptor Permitir desde esta fuente activado" width="262" height="320">
+      </div>
+      <div class="fix"><b class="lbl">Solución</b><p>Pulsa <em>Configuración</em> y activa <em>Permitir desde esta fuente</em>. Si no sale el botón, ve a <em>Ajustes › Seguridad › Instalar aplicaciones desconocidas</em> y da permiso al navegador o a la app desde donde la descargaste (Chrome, WhatsApp o Telegram).</p></div>
+    </article>
+    <article class="warn pp">
+      <h3>Aviso de Google Play Protect</h3>
+      <p>Puede salir un cartel rojo o amarillo de «App no segura». Sale porque PepeTV no está en la tienda de Google, no porque tenga nada malo.</p>
+      <div class="imgs">
+        <img src="img/play-protect.webp" alt="Aviso de Play Protect: App no segura, con los botones Más detalles e Instalar de todos modos" width="320" height="355">
+      </div>
+      <div class="fix"><b class="lbl">Solución</b><p>Pulsa <em>Más detalles</em> y luego <em>Instalar de todos modos</em>.</p></div>
+    </article>
+  </div>
+</section>
+
+<!-- VOLUNTARIOS SMART TV -->
+<section id="smart-tv" class="wrap sec">
+  <div class="vol">
+    <div class="vol-txt">
+      <span class="eyebrow">Busco voluntarios</span>
+      <h2>¿Tienes una Smart TV con Android TV o Google TV?</h2>
+      <p>PepeTV ya funciona en móviles Android, ordenadores Windows, TV Box y Fire TV Stick. Ahora quiero probarla directamente en televisores, sobre todo que se maneje bien con el mando a distancia.</p>
+      <p>Si me ayudas a probarla, te regalo un año de licencia.</p>
+    </div>
+    <div class="vol-box">
+      <div class="lic"><b>1 año gratis</b><span>de licencia por ayudar a probar</span></div>
+      <a class="btn btn-wa wa-link" data-text="Hola, tengo una Smart TV con Android TV / Google TV y quiero ayudar a probar PepeTV." href="https://wa.me/34613452663">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 8 19.4z"/></svg>Quiero probarla</a>
+    </div>
+  </div>
+</section>
+
+<!-- PREGUNTAS -->
+<section id="faq" class="wrap sec faq">
+  <h2>Preguntas frecuentes</h2>
+  <div class="faq-list">
+    <details><summary>¿PepeTV trae canales?<span class="mas" aria-hidden="true">+</span></summary>
+      <p>No. PepeTV es solo un reproductor. Tú pones la lista que te dé tu proveedor (enlace M3U, Xtream Codes o archivo M3U).</p></details>
+    <details><summary>¿Qué pasa cuando acaban los 7 días?<span class="mas" aria-hidden="true">+</span></summary>
+      <p>La app te avisa. Si quieres seguir, nos mandas tu código, eliges 1 año o 10 años y te la activamos. No se cobra nada automáticamente.</p></details>
+    <details><summary>¿Puedo usarla en varios aparatos?<span class="mas" aria-hidden="true">+</span></summary>
+      <p>Sí, pero cada aparato tiene su código y su propia activación. Si cambias de tele o de móvil, escríbenos y lo vemos.</p></details>
+    <details><summary>¿Dónde veo cuándo me caduca?<span class="mas" aria-hidden="true">+</span></summary>
+      <p>Arriba en la pantalla de inicio, en el aviso verde: «Activo · expira el…».</p></details>
+    <details><summary>¿Por qué el móvil dice que la app no es segura?<span class="mas" aria-hidden="true">+</span></summary>
+      <p>Porque la app se instala desde fuera de la tienda de Google. Es un aviso general de Android. En <a href="#instalar">Cómo instalar</a> te explicamos cómo pasarlo.</p></details>
+    <details><summary>¿Funciona en iPhone?<span class="mas" aria-hidden="true">+</span></summary>
+      <p>Sí, como app web: se abre en Safari y se añade a la pantalla de inicio. Está en pruebas, así que si ves algo raro, cuéntanoslo.</p></details>
+    <details><summary>¿Sirve para mis padres, que no se apañan con la tecnología?<span class="mas" aria-hidden="true">+</span></summary>
+      <p>Sí. Son cuatro botones grandes y se maneja con el mando. Si nos mandas su código, les dejamos la lista cargada, y si se lían les ayudamos a distancia con su permiso.</p></details>
+  </div>
+</section>
+
+<!-- CONTACTO -->
+<section id="contacto" class="wrap sec">
+  <div class="cta">
+    <div>
+      <h2>¿Dudas? Escríbenos.</h2>
+      <p>Te contestamos por WhatsApp.</p>
+    </div>
+    <div class="num" style="flex:0 1 auto">
+      <a class="btn btn-white wa-link" data-text="Hola, tengo una duda sobre PepeTV." href="https://wa.me/34613452663">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#128C4A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 8 19.4z"/></svg>
+        <span id="waNum">+34 613 45 26 63</span></a>
+      <button class="copy" type="button" id="copyBtn">Copiar número</button>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="foot-top">
+      <img src="img/logo.webp" alt="PepeTV" width="783" height="172">
+      <nav aria-label="Legal">
+        <a href="#inicio">Política de privacidad</a>
+        <a href="#inicio">Términos de uso</a>
+        <a href="#inicio">Aviso legal</a>
+        <a href="#contacto">Contacto</a>
+      </nav>
+    </div>
+    <p>PepeTV es solo un reproductor multimedia: no incluye, aloja ni vende canales, listas ni contenidos. El usuario es responsable de cargar únicamente listas a las que tenga derecho de acceso. Android, Google TV, Fire TV y Windows son marcas de sus respectivos propietarios.</p>
+    <p class="small">© 2026 PepeTV · [Nombre del titular y NIF]</p>
+  </div>
+</footer>
 
 <script>
-/* ===================================================================
-   MARCA — lo ÚNICO que cambia de un revendedor a otro.
-   colors: si se borran (colors:null) la app los saca sola del icono.
-   =================================================================== */
-const BRAND = {
-  name:    'PepeTV',
-  prefix:  'PEPE',                 // empieza el código de aparato: PEPE-XXXX-XXXX
-  version: '2.8',
-  logo:    'marca/logo.png',       // logo alargado (portada y activación)
-  icon:    'marca/icono.png',      // icono cuadrado (arranque y app)
-  colors:  { c1:'#00D8F6', c2:'#0057F0', bg:'#05070C' },
-  tmdb:    '77060e802b38d2df566ac5d098a71a12',   // clave de themoviedb.org (tendencias y fichas)
-  api:     'https://script.google.com/macros/s/AKfycbwrFFqmkAbsibthw4o5HelUQayvQ7wUNuoQaeHUMOfMmwVGdJl0t6pA7D8lDhS2vke3/exec',  // panel de Google. Vacía = modo demostración
-  legal:   'PepeTV es solo un reproductor: no incluye ni vende canales ni contenidos.'
+/* ===== AJUSTES: cambia aquí tus enlaces ===== */
+const PEPETV = {
+  whatsapp: "34613452663",
+  apk: "https://github.com/aplicacionesmovilesecija-eng/pepetv-descargas/releases/latest/download/PepeTV-Android.apk",
+  exe: "https://github.com/aplicacionesmovilesecija-eng/pepetv-descargas/releases/latest/download/PepeTV-Windows.exe",
+  downloader: "8362630", // código de la app Downloader (Fire TV)
+  web: "http://pepe-tv.com/app"
 };
+/* ============================================ */
 
-/* =================================================================== TEXTOS */
-const TXT = {
-  es:{comprobando:'Comprobando licencia…',codigoAparato:'Código del aparato',codigo:'Código',actualizar:'Actualizar',idioma:'Idioma',salir:'Salir',
-      tv:'TV en vivo',peliculas:'Películas',series:'Series',radios:'Radios',radiosSub:'Emisoras de todo el mundo',cambiarLista:'Cambiar lista',
-      ajustes:'Ajustes',info:'Info',cerrar:'Cerrar',salirPreg:'¿Salir de la aplicación?',si:'Sí, salir',no:'No',eligeLista:'Elija su lista de reproducción',
-      st_trial_end:'Prueba terminada',st_expired:'Licencia caducada',st_blocked:'Aparato bloqueado',st_trial:'Prueba',st_active:'Activo',
-      tit_trial_end:'Tu prueba gratuita ha terminado',tit_expired:'Tu licencia ha caducado',tit_blocked:'Este aparato está bloqueado',
-      msg_renovar:'Para seguir usando {app}, activa una licencia. Elige el plan que prefieras:',msg_blocked:'Ponte en contacto con soporte para más información.',soporte:'Contactar con soporte',soporteCorto:'Soporte',enlaces:'Enlaces',sinSoporte:'Tu proveedor aún no ha puesto un contacto de soporte',
-      ano:'1 año',anos:'10 años',masVendido:'MEJOR PRECIO',quedan:'Prueba · quedan {n} días',quedan1:'Prueba · queda 1 día',queda0:'Prueba · último día',
-      expira:'Activo · expira el {f}',listaActual:'Lista actual:',sinListas:'Todavía no tienes listas. Envía tu código a tu proveedor para que te las cargue.',
-      canales:'{n} canales',pelis:'{n} películas',seriesN:'{n} series',enObras:'Esta sección la estamos montando',ajustesPronto:'Los ajustes llegan en la siguiente versión',
-      sinConexion:'Sin conexión con el servidor de licencias. Se usa el último estado guardado.',errConexion:'No se puede comprobar la licencia. Revisa la conexión a internet.',
-      estado:'Estado',fin:'Válido hasta',version:'Versión',sistema:'Sistema',listasN:'Listas',demo:'Modo demostración',salirWeb:'En el navegador cierra la pestaña para salir'},
-  en:{comprobando:'Checking license…',codigoAparato:'Device code',codigo:'Code',actualizar:'Refresh',idioma:'Language',salir:'Exit',
-      tv:'Live TV',peliculas:'Movies',series:'Series',radios:'Radio',radiosSub:'Stations worldwide',cambiarLista:'Change playlist',
-      ajustes:'Settings',info:'Info',cerrar:'Close',salirPreg:'Exit the app?',si:'Yes, exit',no:'No',eligeLista:'Choose your playlist',
-      st_trial_end:'Trial ended',st_expired:'License expired',st_blocked:'Device blocked',st_trial:'Trial',st_active:'Active',
-      tit_trial_end:'Your free trial has ended',tit_expired:'Your license has expired',tit_blocked:'This device is blocked',
-      msg_renovar:'To keep using {app}, activate a license. Choose your plan:',msg_blocked:'Please contact support for more information.',soporte:'Contact support',soporteCorto:'Support',enlaces:'Links',sinSoporte:'Your provider has not set a support contact yet',
-      ano:'1 year',anos:'10 years',masVendido:'BEST VALUE',quedan:'Trial · {n} days left',quedan1:'Trial · 1 day left',queda0:'Trial · last day',
-      expira:'Active · expires {f}',listaActual:'Current playlist:',sinListas:'No playlists yet. Send your code to your provider so they can load them.',
-      canales:'{n} channels',pelis:'{n} movies',seriesN:'{n} series',enObras:'This section is under construction',ajustesPronto:'Settings arrive in the next version',
-      sinConexion:'License server unreachable. Using last saved status.',errConexion:'Cannot check the license. Check your internet connection.',
-      estado:'Status',fin:'Valid until',version:'Version',sistema:'System',listasN:'Playlists',demo:'Demo mode',salirWeb:'In a browser, close the tab to exit'}
-};
-const IDIOMAS = [['es','Español'],['en','English']];
+(function(){
+  const wa = t => "https://wa.me/" + PEPETV.whatsapp + "?text=" + encodeURIComponent(t);
+  document.querySelectorAll(".wa-link").forEach(a => { a.href = wa(a.dataset.text || "Hola"); a.target = "_blank"; a.rel = "noopener"; });
 
-/* =================================================================== UTILIDADES */
-const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
-const guarda = (k,v) => { try{ localStorage.setItem('ptv_'+k, JSON.stringify(v)); }catch(e){} };
-const lee = (k,d) => { try{ const v = localStorage.getItem('ptv_'+k); return v==null ? d : JSON.parse(v); }catch(e){ return d; } };
-let LANG = lee('lang', 'es'); if(!TXT[LANG]) LANG = 'es';
-const t = (k,o) => { let s = (TXT[LANG][k] ?? TXT.es[k] ?? k); for(const x in (o||{})) s = s.replace('{'+x+'}', o[x]); return s; };
-const fecha = ms => new Date(ms).toLocaleDateString(LANG==='es'?'es-ES':'en-GB',{day:'2-digit',month:'2-digit',year:'numeric'});
-const esc = s => String(s??'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let tAviso; function aviso(m){ const a=$('#aviso'); a.textContent=m; a.classList.add('on'); clearTimeout(tAviso); tAviso=setTimeout(()=>a.classList.remove('on'),3200); }
+  const setLink = (id, url, falta) => {
+    const a = document.getElementById(id);
+    if (url) { a.href = url; a.rel = "noopener"; }
+    else { a.href = wa(falta); a.target = "_blank"; }
+  };
+  setLink("lnkApk", PEPETV.apk, "Hola, quiero descargar PepeTV para Android.");
+  setLink("lnkExe", PEPETV.exe, "Hola, quiero descargar PepeTV para Windows.");
+  document.getElementById("lnkWeb").href = PEPETV.web;
+  if (PEPETV.downloader) document.getElementById("dlCode").textContent = PEPETV.downloader;
 
-/* =================================================================== COLORES DESDE EL LOGO */
-function ponColores(c){ const h=document.documentElement, r=h.style; r.setProperty('--c1',c.c1); r.setProperty('--c2',c.c2); if(c.bg){ h.dataset.bgo=c.bg; if(h.dataset.tema!=='claro') r.setProperty('--bg',c.bg); } }
-function coloresDelLogo(src){
-  return new Promise(ok => {
-    const img = new Image(); img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      try{
-        const W=120, H=Math.round(120*img.height/img.width), cv=document.createElement('canvas'); cv.width=W; cv.height=H;
-        const x=cv.getContext('2d'); x.drawImage(img,0,0,W,H); const d=x.getImageData(0,0,W,H).data, vivos=[];
-        for(let i=0;i<d.length;i+=4){
-          if(d[i+3]<200) continue;
-          const r=d[i]/255,g=d[i+1]/255,b=d[i+2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,s=mx===mn?0:(mx-mn)/(1-Math.abs(2*l-1));
-          if(s>.45 && l>.25 && l<.8) vivos.push([d[i],d[i+1],d[i+2],l]);
-        }
-        if(vivos.length<20) return ok(null);
-        vivos.sort((a,b)=>b[3]-a[3]);
-        const media = arr => '#'+[0,1,2].map(k=>Math.round(arr.reduce((s,p)=>s+p[k],0)/arr.length).toString(16).padStart(2,'0')).join('');
-        const q = Math.max(1,Math.floor(vivos.length/4));
-        ok({ c1: media(vivos.slice(0,q)), c2: media(vivos.slice(-q)) });   // el más claro y el más oscuro del logo
-      }catch(e){ ok(null); }
-    };
-    img.onerror = () => ok(null); img.src = src;
+  // Los botones de precio eligen el plan en el formulario
+  document.querySelectorAll("[data-plan]").forEach(a => a.addEventListener("click", () => {
+    const r = document.querySelector('input[name="plan"][value="' + a.dataset.plan + '"]');
+    if (r) r.checked = true;
+    setTimeout(() => document.getElementById("codigo").focus({preventScroll:true}), 400);
+  }));
+
+  // Formato del código mientras se escribe: PEPE-XXXX-XXXX
+  const inp = document.getElementById("codigo"), err = document.getElementById("codigoErr");
+  inp.addEventListener("input", () => {
+    let v = inp.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (v && !"PEPE".startsWith(v.slice(0,4)) ) v = "PEPE" + v;
+    const p = [v.slice(0,4), v.slice(4,8), v.slice(8,12)].filter(Boolean);
+    inp.value = p.join("-");
+    err.hidden = true;
   });
-}
 
-/* =================================================================== CÓDIGO DEL APARATO */
-function codigoAparato(){
-  let c = lee('code');
-  if(!c){
-    const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', n=new Uint8Array(8); crypto.getRandomValues(n);
-    const p = [...n].map(v=>A[v%A.length]).join('');
-    c = BRAND.prefix+'-'+p.slice(0,4)+'-'+p.slice(4);
-    guarda('code', c);
-  }
-  return c;
-}
-let CODE = codigoAparato();
-/* 2.6: clave secreta del aparato (no sale en pantalla). Con ella el panel sabe que es este aparato y no otro con el mismo código.
-   En Android y en el programa de Windows sale del propio aparato (no se pierde al reinstalar); en el navegador se guarda aquí. */
-let SEC = lee('sec', '');
-if(!SEC || SEC.length < 16){ const n = new Uint8Array(20); crypto.getRandomValues(n); SEC = [...n].map(v => v.toString(16).padStart(2, '0')).join(''); guarda('sec', SEC); }
-async function derivaClave(id){
-  const txt = id + '|pepetv-clave-2.6';
-  try{ const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt)); return [...new Uint8Array(h)].map(v => v.toString(16).padStart(2, '0')).join('').slice(0, 40); }
-  catch(e){ let a = 0x811c9dc5, b = 0x1b873593, c = 0x9e3779b1; for(const ch of txt){ const k = ch.charCodeAt(0); a = Math.imul(a ^ k, 16777619); b = Math.imul(b ^ k, 2654435761); c = Math.imul(c ^ k, 2246822519); }
-    return [a, b, c, a ^ c, b ^ a].map(x => (x >>> 0).toString(16).padStart(8, '0')).join(''); }
-}
-/* En Android el código sale del propio aparato: si desinstalan y vuelven a instalar,
-   el código es el mismo (no se regala otra prueba y no se pierde la licencia). */
-async function codigoNativo(){
-  try{
-    /* programa de Windows (pc/): el identificador fijo del ordenador */
-    let id = '';
-    if(window.PepePC && window.PepePC.id) id = String(await window.PepePC.id() || '');
-    else {
-      const C = window.Capacitor, D = C && C.isNativePlatform && C.isNativePlatform() && C.Plugins && C.Plugins.Device;
-      if(!D) return;
-      const r = await D.getId(); id = String((r && (r.identifier || r.uuid)) || '');
-    }
-    if(!id) return;
-    SEC = await derivaClave(id);
-    let a = 0x811c9dc5, b = 0x9e3779b1;
-    for(const ch of id + '|pepetv'){ const k = ch.charCodeAt(0); a = Math.imul(a ^ k, 16777619); b = Math.imul(b ^ k, 2246822519); }
-    const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let x = a >>> 0, y = b >>> 0, s = '';
-    for(let i=0;i<4;i++){ s += A[x % 32]; x = Math.floor(x / 32); }
-    for(let i=0;i<4;i++){ s += A[y % 32]; y = Math.floor(y / 32); }
-    CODE = BRAND.prefix + '-' + s.slice(0,4) + '-' + s.slice(4);
-    guarda('code', CODE);
-  }catch(e){}
-}
-function sistema(){
-  const u=navigator.userAgent;
-  if(/AFT/i.test(u)) return 'Fire TV'; if(/Android TV|; ?TV|BRAVIA|SMART-TV/i.test(u)) return 'Android TV';
-  if(/Android/i.test(u)) return 'Android'; if(/iPhone|iPad/i.test(u)) return 'iOS';
-  if(window.PepePC) return /Windows/i.test(u) ? 'Windows (programa)' : 'PC (programa)';
-  if(/Windows/i.test(u)) return 'Windows'; if(/Mac/i.test(u)) return 'Mac'; return 'Web';
-}
-
-/* =================================================================== LICENCIA */
-let LIC = null;            // {st,end,plan,prices,contact,lists}
-async function pideLicencia(){
-  if(!BRAND.api) return licenciaDemo();
-  const q = new URLSearchParams({a:'lic', d:CODE, s:SEC, b:BRAND.name, v:BRAND.version, sys:sistema(), cc:(navigator.language||'').slice(-2).toUpperCase()});
-  if(typeof MI_IP !== 'undefined' && MI_IP) q.set('ip', MI_IP);
-  const ctl = new AbortController(), tm = setTimeout(()=>ctl.abort(), 15000);
-  try{
-    const r = await fetch(BRAND.api+'?'+q, {signal:ctl.signal}); const j = await r.json();
-    if(!j.ok) throw new Error(j.err||'error');
-    guarda('lic', j);
-    if(j.secKo) setTimeout(() => aviso('Este aparato no está verificado. Contacta con tu proveedor para que lo active.'), 2500);   // 2.6
-    return j;
-  }catch(e){
-    const v = lee('lic');
-    if(v){ aviso(t('sinConexion')); return v; }
-    throw e;
-  }finally{ clearTimeout(tm); }
-}
-/* Sin panel conectado: la app se comporta igual, contando 7 días desde la primera vez.
-   Para ver otras pantallas: index.html?estado=expired | trial_end | blocked | active */
-function licenciaDemo(){
-  let alta = lee('demo_alta'); if(!alta){ alta = Date.now(); guarda('demo_alta', alta); }
-  const forzado = new URLSearchParams(location.search).get('estado');
-  let st = Date.now() < alta+7*864e5 ? 'trial' : 'trial_end', end = alta+7*864e5;
-  if(forzado){ st = forzado; end = st==='active' ? Date.now()+300*864e5 : Date.now()-864e5; }
-  return { ok:true, demo:true, st, end, plan: st.startsWith('trial')?'PRUEBA':'1 AÑO',
-    prices:[['10 €','1 año'],['25 €','10 años']], contact:'Envía este código a tu proveedor para activar el aparato.',
-    lists: (st==='trial'||st==='active') ? [{name:'Lista principal',type:'link',url:''},{name:'Deportes',type:'link',url:''}] : [] };
-}
-
-/* =================================================================== "ESTOY ENCENDIDO" (luz verde del panel)
-   Cada 2 minutos, mientras la app está abierta y a la vista, avisa al panel y dice qué se está viendo. */
-function queVe(){
-  try{
-    if (typeof SF !== 'undefined' && SF.abierta && SF.it) return 'Serie: ' + SF.it.n + (SF.ep ? ' T' + SF.ep.t + 'E' + SF.ep.e : '');
-    if (typeof PF !== 'undefined' && PF.abierta && PF.it) return 'Película: ' + PF.it.n;
-    if (typeof S !== 'undefined' && S.jugando && $('#sec').classList.contains('on')) return ({ live:'TV', radio:'Radio' }[S.tipo] || '') + ': ' + S.jugando.n;
-    const on = $('.scr.on'); return on ? ({ home:'En la portada', act:'Pantalla de activación', listas:'Eligiendo lista', sec:'Mirando el menú' }[on.id] || '') : '';
-  }catch(e){ return ''; }
-}
-let tPing = null, ultPing = 0;
-/* 1.7: la IP pública desde la que se conecta (para verla en el panel). Se pide al arrancar y cada 30 min. */
-let MI_IP = '', ipAt = 0;
-function sacaIp(){
-  if (Date.now() - ipAt < 30 * 60e3 && MI_IP) return; ipAt = Date.now();
-  fetch('https://api.ipify.org?format=json').then(r => r.json()).then(j => { if (j && j.ip) MI_IP = String(j.ip); }).catch(() => {});
-}
-sacaIp();
-/* 2.8: para el panel, cuándo caduca la lista de canales que tiene puesta (la da el servidor del proveedor) */
-function infoLista(){
-  try { if (typeof LISTA === 'undefined' || !LISTA || typeof listaActual !== 'function') return ''; const l = listaActual(); if (!l) return '';
-    return '&le=' + (LISTA.exp ? Math.round(LISTA.exp) : 0) + '&ln=' + encodeURIComponent(String(l.name || '').slice(0, 40)); } catch (e) { return ''; }
-}
-function ping(){
-  if (!BRAND.api || document.hidden) return;
-  ultPing = Date.now(); sacaIp();
-  const vis = typeof avisosPorConfirmar !== 'undefined' ? avisosPorConfirmar.slice() : [];      // avisos ya enseñados: se le dice al panel
-  fetch(BRAND.api + '?a=ping&d=' + encodeURIComponent(CODE) + '&s=' + encodeURIComponent(SEC) + '&w=' + encodeURIComponent(queVe()) + (vis.length ? '&vis=' + encodeURIComponent(vis.join(',')) : '') + (MI_IP ? '&ip=' + encodeURIComponent(MI_IP) : '') + infoLista())
-    .then(r => r.json()).then(j => {
-      if (vis.length) avisosPorConfirmar.splice(0, vis.length);
-      if (j && j.avisos && typeof muestraAvisos === 'function') muestraAvisos(j.avisos);
-      if (j && Array.isArray(j.ban) && typeof LIC !== 'undefined' && LIC) { const nb = JSON.stringify(j.ban); if (nb !== JSON.stringify(LIC.banners || [])) { LIC.banners = j.ban; if (typeof pintaBanners === 'function') pintaBanners(); } }
-      /* botón de emergencia del panel: si cambia, se vuelven a pedir las listas (en menos de un minuto) */
-      if (j && j.em !== undefined && LIC && (j.em ? 1 : 0) !== (LIC.em ? 1 : 0)) { LIC.em = j.em; if (typeof paraVideo === 'function') { try { pantallaCompleta(false); paraVideo(); } catch (e) {} } LISTA = null; arranca(true); } }).catch(() => {});
-}
-function pingPronto(){ clearTimeout(tPing); tPing = setTimeout(ping, Date.now() - ultPing > 30000 ? 4000 : 30000); }
-setInterval(ping, 60000);          // cada minuto: luz verde del panel y avisos
-document.addEventListener('visibilitychange', () => { if (!document.hidden) ping(); });
-
-/* =================================================================== SOPORTE: WhatsApp (o llamada) con el mensaje ya escrito */
-function abreFuera(url){
-  const C = window.Capacitor;
-  if (C && C.isNativePlatform && C.isNativePlatform()) location.href = url;   // la app lo abre en WhatsApp / teléfono / navegador
-  else window.open(url, '_blank');
-}
-function contactaSoporte(motivo){
-  const s = (LIC && LIC.support) || {};
-  if (!s.wa && !s.tel) { aviso(t('sinSoporte')); return; }
-  const m = !motivo ? (LIC && LIC.st === 'blocked' ? 'bloq' : LIC && (LIC.st === 'expired' || LIC.st === 'trial_end') ? 'cad' : 'gen') : motivo;
-  const txt = String(s[m] || s.gen || '').replace(/\{codigo\}/g, CODE);
-  if (s.wa) abreFuera('https://wa.me/' + s.wa + '?text=' + encodeURIComponent(txt));
-  else abreFuera('tel:' + s.tel);
-}
-
-/* =================================================================== FLECHAS DE LA FILA DE BOTONES */
-function flechasCarril(){
-  $$('.carril').forEach(c => { const f = c.querySelector('.homeBtns'), iz = c.querySelector('.izq'), de = c.querySelector('.der');
-    iz.hidden = f.scrollLeft < 4; de.hidden = f.scrollLeft + f.clientWidth >= f.scrollWidth - 4; });
-}
-document.addEventListener('click', e => { const b = e.target.closest('.flecha'); if (!b) return;
-  const f = b.parentNode.querySelector('.homeBtns'); if (!f) return; f.scrollBy({ left: (b.classList.contains('izq') ? -1 : 1) * f.clientWidth * .7, behavior:'smooth' }); });
-document.addEventListener('scroll', e => { if (e.target.classList && e.target.classList.contains('homeBtns')) flechasCarril(); }, true);
-addEventListener('resize', flechasCarril);
-
-/* =================================================================== PANTALLAS */
-let pila = [];
-function muestra(id, guardaPila=true){
-  const cur = $('.scr.on'); if(cur && guardaPila && cur.id!=='splash') pila.push(cur.id);
-  $$('.scr').forEach(s=>s.classList.toggle('on', s.id===id));
-  enfocaPrimero($('#'+id));
-}
-function atras(){
-  const v = $('.velo.on'); if(v){ cierraVentana(); return; }
-  const cur = $('.scr.on').id;
-  if(cur==='home' || cur==='act'){ abreVentana('vSalir'); return; }
-  muestra(pila.pop() || 'home', false);
-}
-
-function pintaTextos(){
-  $$('[data-t]').forEach(e=>e.textContent=t(e.dataset.t));
-  $$('[data-code]').forEach(e=>e.textContent=CODE);
-  $$('[data-legal]').forEach(e=>e.textContent=BRAND.legal);
-  $$('[data-version]').forEach(e=>e.textContent='v'+BRAND.version+(LIC&&LIC.demo?' · '+t('demo'):''));
-  document.documentElement.lang = LANG;
-}
-
-function pintaActivacion(){
-  const st = LIC.st, ok = st==='trial'||st==='active';
-  $('#actEstado').className = 'actEstado'+(ok?' ok':'');
-  $('#actEstado span').textContent = t('st_'+st);
-  const bloq = st==='blocked';
-  $('#actTit').textContent = bloq ? '' : t('tit_'+st);          // bloqueado: el aviso rojo ya lo dice, no se repite
-  $('#actTit').hidden = bloq;
-  const sop = (LIC.support || {}), hay = !!(sop.wa || sop.tel);
-  $('#actSop').hidden = !hay;
-  $('#actAct').classList.toggle('pri', !hay);
-  $('#actMsg').textContent = bloq ? t('msg_blocked') : t('msg_renovar',{app:BRAND.name});
-  $('#planes').style.display = bloq ? 'none' : '';
-  $('#planes').innerHTML = (LIC.prices||[]).map((p,i)=>
-    `<div class="plan${i===1?' dest':''}">${i===1?`<div class="tag">${t('masVendido')}</div>`:''}<div class="pre">${esc(p[0])}</div><div class="dur">${i===0?t('ano'):t('anos')}</div></div>`).join('');
-  $('#actContacto').textContent = LIC.contact || '';
-  $('#actFecha').textContent = fecha(Date.now());
-}
-
-function pintaPortada(){
-  const p = $('#pastilla'), dias = Math.ceil((LIC.end-Date.now())/864e5);
-  if(LIC.st==='trial'){ p.className='pastilla prueba'; p.querySelector('span').textContent = dias>1?t('quedan',{n:dias}):dias===1?t('quedan1'):t('queda0'); }
-  else { p.className='pastilla'; p.querySelector('span').textContent = t('expira',{f:fecha(LIC.end)}); }
-  const L = LIC.lists||[], i = Math.min(lee('lista',0), Math.max(0,L.length-1));
-  $('#listaAct').innerHTML = L.length ? `${t('listaActual')} <b>${esc(L[i].name)}</b>` : t('sinListas');
-  $('#btnListas').style.display = L.length>1 ? '' : 'none'; $('#nLis').textContent = L.length>1 ? '('+L.length+')' : '';
-  const rL=document.querySelector('#rail [data-r="listas"]'); if(rL) rL.dataset.tip = t('cambiarLista') + (L.length>1 ? ' ('+L.length+')' : '');
-  const sp=(LIC.support||{}); $('#btnSoporte').style.display = (sp.wa||sp.tel) ? '' : 'none';
-  $('#btnEnlaces').style.display = (LIC.links||[]).length ? '' : 'none';
-  ['nLive','nMovie','nSeries'].forEach(id=>$('#'+id).textContent=''); $$('.vacia').forEach(x=>x.classList.remove('vacia'));
-  if(typeof LISTA!=='undefined' && LISTA && L.length && LISTA.key===claveLista(L[i])) contadores();
-  requestAnimationFrame(flechasCarril);
-}
-
-function pintaListas(){
-  const L = LIC.lists||[], sel = lee('lista',0);
-  $('#circulos').innerHTML = L.map((l,i)=>`<button class="circ f${i===sel?' sel':''}" data-go="usaLista:${i}">
-    <div class="bola">${esc((l.name||'?').trim().charAt(0).toUpperCase())}</div><span>${esc(l.name)}</span><small>${esc(l.type==='xtream'?'Xtream':l.type==='file'?'M3U':'URL')}</small></button>`).join('');
-}
-
-/* 2.6: en la web (iPhone/navegador) el aparato solo se da de alta cuando una persona pulsa «Empezar» (los robots no lo hacen) */
-const esNativa = () => !!(window.PepePC || (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()));
-function esperaPersona(){
-  if (esNativa() || lee('lic') || lee('humano')) return Promise.resolve();
-  return new Promise(ok => {
-    const st = $('#splashTxt'); st.textContent = '';
-    st.insertAdjacentHTML('afterend', '<button class="btn pri f" id="bEmpezar" style="margin:calc(var(--u)*2) auto 0;font-size:calc(var(--u)*var(--ft)*1.6);padding:calc(var(--u)*1.2) calc(var(--u)*4)">Empezar</button>');
-    const b = $('#bEmpezar'); try { b.focus(); } catch (e) {}
-    b.onclick = () => { guarda('humano', 1); b.remove(); st.textContent = 'Conectando…'; ok(); };
+  document.getElementById("actForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const code = inp.value.trim();
+    if (!/^PEPE-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)) { err.hidden = false; inp.focus(); return; }
+    const plan = document.querySelector('input[name="plan"]:checked').value;
+    const url = wa("Hola, quiero activar PepeTV.\nCódigo: " + code + "\nPlan: " + plan);
+    const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener";
+    document.body.appendChild(a); a.click(); a.remove();
+    document.getElementById("actMsg").innerHTML = 'Mensaje preparado para el código <b style="color:var(--white)">' + code + '</b>. Si no se abrió WhatsApp, escríbenos al <b style="color:var(--white)">+34 613 45 26 63</b>.';
   });
-}
-async function arranca(forzar){
-  pintaTextos();
-  muestra('splash', false);
-  await esperaPersona();
-  try{ LIC = await pideLicencia(); }
-  catch(e){ $('#splashTxt').textContent = t('errConexion'); setTimeout(arranca, 8000); return; }
-  if (LIC.pinReset) { guarda('pin_h', ''); delete LIC.pinReset; guarda('lic', LIC); setTimeout(() => aviso('Tu proveedor ha quitado el PIN de control parental'), 800); }
-  if (LIC.reset) {           // el proveedor ha pedido dejar la app como recién instalada (código y licencia se quedan)
-    const cod = lee('code'); delete LIC.reset;
-    try { localStorage.clear(); } catch (e) {} try { indexedDB.deleteDatabase('pepetv'); } catch (e) {}
-    if (cod) guarda('code', cod); guarda('sec', SEC); guarda('humano', 1); guarda('lic', LIC);   // la clave del aparato se conserva
-    $('#splashTxt').textContent = 'Tu proveedor ha reiniciado la app…'; setTimeout(() => location.reload(), 1500); return;
-  }
-  pintaTextos();
-  pila = []; ping();
-  if (LIC.avisos && typeof muestraAvisos === 'function') setTimeout(() => muestraAvisos(LIC.avisos), 1200);
-  if(LIC.st==='trial' || LIC.st==='active'){ pintaPortada(); muestra('home', false); precargaLista(forzar).catch(()=>{}); }
-  else { pintaActivacion(); muestra('act', false); }
-}
 
-/* =================================================================== VENTANAS */
-let focoAntes = null;
-function abreVentana(id){ focoAntes = document.activeElement; $('#'+id).classList.add('on'); enfocaPrimero($('#'+id)); }
-function cierraVentana(){ $$('.velo.on').forEach(v=>v.classList.remove('on')); if(focoAntes) enfoca(focoAntes); }
-function abreInfo(){
-  const f = [[t('codigoAparato'),CODE],[t('estado'),t('st_'+LIC.st)],[t('fin'),fecha(LIC.end)],[t('listasN'),(LIC.lists||[]).length],
-             [t('version'),BRAND.version],[t('sistema'),sistema()]];
-  $('#infoFilas').innerHTML = f.map(x=>`<div class="fila"><span>${esc(x[0])}</span><b>${esc(x[1])}</b></div>`).join('');
-  abreVentana('vInfo');
-}
-function abreIdioma(){
-  $('#idiomas').innerHTML = IDIOMAS.map(([k,n])=>`<button class="opc f${k===LANG?' sel':''}" data-go="lang:${k}">${n}</button>`).join('');
-  abreVentana('vIdioma');
-}
-
-/* =================================================================== ACCIONES */
-function accion(go){
-  const [a,arg] = go.split(':');
-  switch(a){
-    case 'refrescar': cierraVentana(); arranca(true); break;
-    case 'soporte': contactaSoporte(arg); break;
-    case 'idioma': abreIdioma(); break;
-    case 'lang': LANG=arg; guarda('lang',arg); cierraVentana(); pintaTextos();
-                 if($('#act').classList.contains('on')) pintaActivacion(); else pintaPortada(); break;
-    case 'info': abreInfo(); break;
-    case 'ajustes': aviso(t('ajustesPronto')); break;
-    case 'listas': pintaListas(); muestra('listas'); break;
-    case 'usaLista': guarda('lista', +arg); LISTA=null; precargaLista().catch(()=>{}); pintaPortada(); muestra('home', false); pila=[]; break;
-    case 'sec': abreSeccion(arg); break;
-    case 'secReintentar': LISTA=null; cargaEnCurso=null; $('#scarga').classList.remove('on'); abreSeccion(S.tipo); break;
-    case 'secVolver': $('#scarga').classList.remove('on'); salSeccion(); break;
-    case 'buscarYa': buscarYa(); break;
-    case 'pf': (typeof SF !== 'undefined' && SF.abierta ? accionSerie : accionPeli)(arg); break;
-    case 'ap': { const q = go.split(':'); accionApar(q[1], q[2]); break; }
-    case 'ps': { const q = go.split(':'); accionSerie(q[1], q[2]); break; }
-    case 'salir': abreVentana('vSalir'); break;
-    case 'salirYa': salir(); break;
-    case 'cerrar': cierraVentana(); break;
-  }
-}
-function salir(){
-  const C = window.Capacitor;
-  if(C && C.Plugins && C.Plugins.App) return C.Plugins.App.exitApp();
-  if(navigator.app && navigator.app.exitApp) return navigator.app.exitApp();
-  cierraVentana(); window.close(); setTimeout(()=>aviso(t('salirWeb')),300);
-}
-document.addEventListener('click', e=>{ const b=e.target.closest('[data-go]'); if(b) accion(b.dataset.go); });
-
-/* =================================================================== MANDO A DISTANCIA */
-function zonaActiva(){ return $('.velo.on') || $('.scr.on'); }
-function enfocables(z){ return [...z.querySelectorAll('.f')].filter(e=>e.offsetParent!==null); }
-function enfoca(e){ if(!e) return; $$('.kf').forEach(x=>x.classList.remove('kf')); e.focus({preventScroll:false}); e.classList.add('kf'); }
-function enfocaPrimero(z){ requestAnimationFrame(()=>enfoca(z.querySelector('.sel.f') || z.querySelector('.f.pri') || enfocables(z)[0])); }
-function mueve(dir){
-  const z = zonaActiva(), todos = enfocables(z), cur = document.activeElement;
-  if(!todos.includes(cur)) return enfocaPrimero(z);
-  const a = cur.getBoundingClientRect(), ax=a.left+a.width/2, ay=a.top+a.height/2;
-  let mejor=null, pm=Infinity;
-  for(const e of todos){
-    if(e===cur) continue;
-    const b=e.getBoundingClientRect(), bx=b.left+b.width/2, by=b.top+b.height/2, dx=bx-ax, dy=by-ay;
-    const ok = dir==='l'?dx<-4:dir==='r'?dx>4:dir==='u'?dy<-4:dy>4; if(!ok) continue;
-    const prin = dir==='l'||dir==='r' ? Math.abs(dx) : Math.abs(dy), lat = dir==='l'||dir==='r' ? Math.abs(dy) : Math.abs(dx);
-    const p = prin + lat*2.5; if(p<pm){ pm=p; mejor=e; }
-  }
-  if(mejor) enfoca(mejor);
-}
-document.addEventListener('keydown', e=>{
-  if(typeof teclaSeccion==='function' && teclaSeccion(e)) return;
-  const k = e.key, c = e.keyCode;
-  const d = {ArrowLeft:'l',ArrowRight:'r',ArrowUp:'u',ArrowDown:'d'}[k];
-  if(d){ e.preventDefault(); mueve(d); return; }
-  if(k==='Escape' || k==='Backspace' || k==='GoBack' || c===10009 || c===461 || c===4){ e.preventDefault(); atras(); return; }
-  if(k==='Enter' && document.activeElement && document.activeElement.dataset.go){ e.preventDefault(); accion(document.activeElement.dataset.go); }
-});
-document.addEventListener('mousedown', ()=>$$('.kf').forEach(x=>x.classList.remove('kf')));
-// botón atrás del móvil dentro de la APK
-/* botón "atrás" del móvil o de la tele: hace exactamente lo mismo que la tecla Atrás del mando
-   (así sale de pantalla completa, de la ficha, de la sección… en el orden correcto) */
-function atrasMovil(){ document.dispatchEvent(new KeyboardEvent('keydown', { key:'Escape', bubbles:true, cancelable:true })); }
-document.addEventListener('backbutton', e=>{ e.preventDefault(); atrasMovil(); }, false);
-try{ window.Capacitor?.Plugins?.App?.addListener('backButton', ()=>atrasMovil()); }catch(e){}
-
-/* =================================================================== RELOJ */
-function reloj(){ const s = new Date().toLocaleTimeString(LANG==='es'?'es-ES':'en-GB',{hour:'2-digit',minute:'2-digit'}); $$('[data-clock]').forEach(e=>e.textContent=s); }
-setInterval(reloj, 10000); reloj();
-
-/* =================================================================== INICIO */
-addEventListener('DOMContentLoaded', async ()=>{
-  $$('[data-logo]').forEach(i=>i.src=BRAND.logo);
-  $$('[data-icon]').forEach(i=>i.src=BRAND.icon);
-  document.title = BRAND.name;
-  ponColores(BRAND.colors || await coloresDelLogo(BRAND.icon) || {c1:'#00D8F6',c2:'#0057F0'});
-  await codigoNativo();
-  arranca();
-});
+  document.getElementById("copyBtn").addEventListener("click", ev => {
+    const b = ev.currentTarget, t = "+34 613 45 26 63";
+    const ok = () => { b.textContent = "Copiado"; setTimeout(() => b.textContent = "Copiar número", 1800); };
+    try {
+      navigator.clipboard.writeText(t).then(ok).catch(() => selectNum());
+    } catch (_) { selectNum(); }
+    function selectNum(){ const r = document.createRange(); r.selectNodeContents(document.getElementById("waNum")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = "Número seleccionado"; }
+  });
+})();
 </script>
-<!-- reproductores de vídeo: van dentro de la APK; si no están (pruebas en PC) se bajan de internet -->
-<script src="lib/hls.min.js"></script>
-<script src="lib/mpegts.js"></script>
-<script>
-(function(){ function carga(u){ var x=document.createElement('script'); x.src=u; document.head.appendChild(x); }
-  if(!window.Hls) carga('https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js');
-  if(!window.mpegts) carga('https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.js'); })();
-</script>
-<script src="js/listas.js"></script>
-<script src="js/seccion.js"></script>
-<script src="js/radios.js"></script>
-<script src="js/peliculas.js"></script>
-<script src="js/series.js"></script>
-<script src="js/apariencia.js"></script>
-<script src="js/nativo.js"></script>
-<script src="js/ajustes.js"></script>
-<script src="js/buscador.js"></script>
-<script src="js/asistencia.js"></script>
-<script src="js/portada.js"></script>
-<script src="js/ordenar.js"></script>
-<script src="js/envio.js"></script>
-<script src="js/uso.js"></script>
-<script src="js/protege.js"></script>
-<script src="js/barra.js"></script>
-<script src="js/estado.js"></script>
-<script src="js/vista.js"></script>
-<script src="js/tip.js"></script>
-<script src="js/pistas.js"></script>
-<script src="js/pc.js"></script>
-<script src="js/descarga.js"></script>
 </body>
 </html>
