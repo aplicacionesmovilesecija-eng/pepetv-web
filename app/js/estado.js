@@ -75,7 +75,10 @@ function pintaEstFicha(){
   box.insertAdjacentHTML('beforeend', htmlEst(it.id, serie ? 'series' : 'movie'));
   document.querySelectorAll('.fbtns [data-go="pf:estado"]').forEach(b => { const n = estadoDe(it.id, serie ? 'series' : 'movie'); b.className = 'rb f bEst' + (n ? ' e' + EST[n].c : ''); b.dataset.tip = EST_TIP[n]; });
 }
-['fPos', 'sPos'].forEach(id => { const b = document.getElementById(id); if (b) b.addEventListener('click', e => { if (e.target.closest('.pojo')) { e.stopPropagation(); accionEstado(); } }); });
+['fPos', 'sPos'].forEach(id => { const b = document.getElementById(id); if (b) b.addEventListener('click', e => {
+  if (e.target.closest('.pojo')) { e.stopPropagation(); accionEstado(); }
+  else if (e.target.closest('.pfav')) { e.stopPropagation(); if (id === 'sPos') accionSerie('fav'); else accionPeli('fav'); }      // 2.9: el corazón de la carátula grande
+}, true); });
 function accionEstado(){
   const serie = typeof SF !== 'undefined' && SF.abierta, it = serie ? SF.it : PF.it; if (!it) return;
   const n = cambiaEstado(it.id, serie ? 'series' : 'movie'); pintaEstFicha();
@@ -202,3 +205,21 @@ teclaSeccion = function(e){
   }
   return _teclaSeccionL(e);
 };
+
+/* ---------- 2.9: TENDENCIAS — el filtro del ojo también aquí, y al volver de la ficha se ve lo marcado ---------- */
+const _pintaTendE = pintaTend;
+pintaTend = async function(){
+  if (TEND.key !== LISTA.key) { TEND.filasTodas = null; await _pintaTendE(); if (TEND.key !== LISTA.key) return; }
+  if (TEND.filas !== TEND._vista) TEND.filasTodas = TEND.filas;                 // filas recién cargadas
+  const todas = TEND.filasTodas || TEND.filas, n = filtroEst(), m = n ? lee(claveEst(), {}) : null;
+  TEND.filas = TEND._vista = n ? todas.map(f => Object.assign({}, f, { its: f.its.filter(x => x.it && m[x.it.id] === n) })).filter(f => f.its.length) : todas;
+  if (n && !TEND.filas.length) { document.getElementById('tend').innerHTML = `<div class="vacio">No hay ninguna marcada como ${EST[n].n} en Tendencias</div>`; return; }
+  return _pintaTendE();
+};
+function repintaTend(){
+  const c = S.cats[S.cat]; if (!c || c.id !== '__tend' || !document.getElementById('tend')) return;
+  const sc = [...document.querySelectorAll('#tend .tcar')].map(x => x.scrollLeft), st = document.getElementById('tend').scrollTop;
+  pintaTend().then(() => requestAnimationFrame(() => { document.querySelectorAll('#tend .tcar').forEach((x, i) => x.scrollLeft = sc[i] || 0); document.getElementById('tend').scrollTop = st; }));
+}
+const _cierraFichaT = cierraFicha; cierraFicha = function(){ const r = _cierraFichaT.apply(this, arguments); repintaTend(); return r; };
+const _cierraSerieT = cierraSerie; cierraSerie = function(){ const r = _cierraSerieT.apply(this, arguments); repintaTend(); return r; };
